@@ -526,7 +526,13 @@ git clone https://github.com/southsidedean/cka-d-cluster-builder-lab.git
 
 **SAMPLE OUTPUT:**
 ```bash
-PUT OUTPUT HERE
+Cloning into 'cka-d-cluster-builder-lab'...
+remote: Enumerating objects: 18, done.
+remote: Counting objects: 100% (18/18), done.
+remote: Compressing objects: 100% (13/13), done.
+remote: Total 18 (delta 1), reused 18 (delta 1), pack-reused 0
+Receiving objects: 100% (18/18), 17.71 KiB | 954.00 KiB/s, done.
+Resolving deltas: 100% (1/1), done.
 ```
 
 **Change directory into the repository directory:**
