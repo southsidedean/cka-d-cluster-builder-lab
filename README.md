@@ -576,8 +576,8 @@ Downloading registry.terraform.io/MonolithProjects/vm/libvirt 1.10.0 for worker.
 
 Initializing provider plugins...
 - Finding dmacvicar/libvirt versions matching ">= 0.7.0"...
-- Installing dmacvicar/libvirt v0.7.1...
-- Installed dmacvicar/libvirt v0.7.1 (self-signed, key ID 96B1FE1A8D4E1EAB)
+- Installing dmacvicar/libvirt v0.7.4...
+- Installed dmacvicar/libvirt v0.7.4 (self-signed, key ID 0833E38C51E74D26)
 
 Partner and community providers are signed by their developers.
 If you'd like to know more about provider signing, you can read about it here:
@@ -601,7 +601,7 @@ commands will detect it and remind you to do so if necessary.
 
 **Next, let's generate a Terraform plan:**
 ```bash
-terraform plan
+terraform plan -out cka-plan.plan
 
 ```
 
@@ -643,13 +643,14 @@ Changes to Outputs:
           + "worker-node-02",
         ]
     }
+...
 ```
 
 This will show us what Terraform is going to build, and will validate our code for errors.  With no errors, let's proceed with a `terraform apply`.
 
 **Deploy cluster:**
 ```bash
-terraform apply -auto-approve
+terraform apply -auto-approve cka-plan.plan
 
 ```
 
