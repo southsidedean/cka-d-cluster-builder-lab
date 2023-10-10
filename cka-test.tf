@@ -146,7 +146,7 @@ data "template_file" "cp_user_data" {
 
 resource "libvirt_cloudinit_disk" "cp_commoninit" {
   name           = "cp_commoninit.iso"
-  user_data      = data.template_file.user_data.rendered
+  user_data      = data.template_file.cp_user_data.rendered
   pool           = var.cp_diskpool
 }
 
@@ -183,7 +183,7 @@ data "template_file" "worker_user_data" {
 
 resource "libvirt_cloudinit_disk" "worker_commoninit" {
   name           = "worker_commoninit.iso"
-  user_data      = data.template_file.user_data.rendered
+  user_data      = data.template_file.worker_user_data.rendered
   pool           = var.worker_diskpool
 }
 
