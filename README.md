@@ -1,20 +1,21 @@
 # cka-d-cluster-builder-lab
-**Tom Dean - 4/13/2023**
+**Tom Dean - 10/10/2023**
 
 ## Introduction
 
 ### The Need: A Quick and Repeatable Local Kubernetes Cluster Using KVM
 
-I've been studying for the CNCF CKA and CKAD certification exams for a while now.  Anyone who is familiar with these exams knows that, in order to practice, you're going to need a cluster.  Hands-on experience with Kubernetes clusters, of the `kubeadm` variety, is key to passing these exams.
+I've been studying for the Cloud Native Computing Foundation's CKA and CKAD certification exams for a while now.  Anyone who is familiar with these exams knows that, in order to practice, you're going to need a cluster.  Hands-on experience with Kubernetes clusters, of the `kubeadm` variety, is key to passing these exams.
 
-For the past year and a half, I've had access to an AWS environment, with a GitLab repository, flashy CI/CD and Terraform/Packer to deliver one or more pre-provisioned Kubernetes environments for me to teach Kubernetes to students, or to practice it on my own.
+For the past year and a half, I've had access to an AWS environment, with a GitLab repository, flashy CI/CD and Terraform/Packer to deliver one or more pre-provisioned Kubernetes environments for me to teach Kubernetes to students, or to practice Kubernetes solo.
 
-Now that I'm out on my own, and that lab environment is a thing of the past, I've been imagining a replacement of my own.
+Now that I'm out on my own, and that fancy AWS lab environment is a thing of the past, I've been imagining a replacement of my own.
 
 I had a few requirements:
 
 - Keep the code in GitLab for development and personal use
   - Use CI/CD: Adding this after the initial release
+    - Working this out in my GitLab environment in my home lab
   - Periodically push the updated code to GitHub to share with the world
 - Use Terraform for automation
    - Flexibility in configuration of cluster via variables
