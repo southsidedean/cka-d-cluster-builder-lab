@@ -134,16 +134,16 @@ provider "libvirt" {
 }
 
 # Module for building our control plane nodes
-
-data "template_file" "cp_user_data" {
-  template = file("${path.module}/cp_cloud_init.cfg")
-}
-
-resource "libvirt_cloudinit_disk" "cp_commoninit" {
-  name           = "cp_commoninit.iso"
-  user_data      = data.template_file.cp_user_data.rendered
-  pool           = var.cp_diskpool
-}
+#
+#data "template_file" "cp_user_data" {
+#  template = file("${path.module}/cp_cloud_init.cfg")
+#}
+#
+#resource "libvirt_cloudinit_disk" "cp_commoninit" {
+#  name           = "cp_commoninit.iso"
+#  user_data      = data.template_file.cp_user_data.rendered
+#  pool           = var.cp_diskpool
+#}
 
 module "controlplane" {
   source  = "MonolithProjects/vm/libvirt"
@@ -163,19 +163,20 @@ module "controlplane" {
     ]
   time_zone   = var.timezone
   os_img_url  = var.osimg
+  runcmd = [ "[ apt, install, qemu-guest-agent ]", " [ systemctl, enable, qemu-guest-agent ]", "[ systemctl, start, qemu-guest-agent ]" ]
 }
 
 # Module for building our worker nodes
-
-data "template_file" "worker_user_data" {
-  template = file("${path.module}/worker_cloud_init.cfg")
-}
-
-resource "libvirt_cloudinit_disk" "worker_commoninit" {
-  name           = "worker_commoninit.iso"
-  user_data      = data.template_file.worker_user_data.rendered
-  pool           = var.worker_diskpool
-}
+#
+#data "template_file" "worker_user_data" {
+#  template = file("${path.module}/worker_cloud_init.cfg")
+#}
+#
+#resource "libvirt_cloudinit_disk" "worker_commoninit" {
+#  name           = "worker_commoninit.iso"
+#  user_data      = data.template_file.worker_user_data.rendered
+#  pool           = var.worker_diskpool
+#}
 
 module "worker" {
   source  = "MonolithProjects/vm/libvirt"
@@ -195,22 +196,8 @@ module "worker" {
     ]
   time_zone   = var.timezone
   os_img_url  = var.osimg
+  runcmd = [ "[ apt, install, qemu-guest-agent ]", " [ systemctl, enable, qemu-guest-agent ]", "[ systemctl, start, qemu-guest-agent ]" ]
 }
-
-
-# This resource will destroy (potentially immediately) after null_resource.next
-#resource "null_resource" "previous" {}
-#
-#resource "time_sleep" "wait_30_seconds" {
-#  depends_on = [null_resource.previous]
-#
-#  create_duration = "30s"
-#}
-
-# This resource will create (at least) 30 seconds after null_resource.previous
-#resource "null_resource" "next" {
-#  depends_on = [time_sleep.wait_30_seconds]
-#}
 
 # Outputs
 
