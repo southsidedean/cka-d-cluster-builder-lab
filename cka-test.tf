@@ -163,7 +163,7 @@ module "controlplane" {
     ]
   time_zone   = var.timezone
   os_img_url  = var.osimg
-  runcmd = [ "[ apt, install, qemu-guest-agent ]", "[ systemctl, enable, qemu-guest-agent ]", "[ systemctl, start, qemu-guest-agent ]" ]
+#  runcmd = [ "[ apt, install, qemu-guest-agent ]", "[ systemctl, enable, qemu-guest-agent ]", "[ systemctl, start, qemu-guest-agent ]" ]
 }
 
 # Module for building our worker nodes
@@ -196,7 +196,7 @@ module "worker" {
     ]
   time_zone   = var.timezone
   os_img_url  = var.osimg
-  runcmd = [ "[ apt, install, qemu-guest-agent ]", "[ systemctl, enable, qemu-guest-agent ]", "[ systemctl, start, qemu-guest-agent ]" ]
+#  runcmd = [ "[ apt, install, qemu-guest-agent ]", "[ systemctl, enable, qemu-guest-agent ]", "[ systemctl, start, qemu-guest-agent ]" ]
 }
 
 # Outputs
