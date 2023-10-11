@@ -139,11 +139,6 @@ data "template_file" "cp_user_data" {
   template = file("${path.module}/cp_cloud_init.cfg")
 }
 
-# for more info about paramater check this out
-# https://github.com/dmacvicar/terraform-provider-libvirt/blob/master/website/docs/r/cloudinit.html.markdown
-# Use CloudInit to add our ssh-key to the instance
-# you can add also meta_data field
-
 resource "libvirt_cloudinit_disk" "cp_commoninit" {
   name           = "cp_commoninit.iso"
   user_data      = data.template_file.cp_user_data.rendered
@@ -168,18 +163,6 @@ module "controlplane" {
     ]
   time_zone   = var.timezone
   os_img_url  = var.osimg
-
-  console {
-    type        = "pty"
-    target_port = "0"
-    target_type = "serial"
-  }
-  
-  console {
-    type        = "pty"
-    target_type = "virtio"
-    target_port = "1"
-  }
 }
 
 # Module for building our worker nodes
@@ -187,11 +170,6 @@ module "controlplane" {
 data "template_file" "worker_user_data" {
   template = file("${path.module}/worker_cloud_init.cfg")
 }
-
-# for more info about paramater check this out
-# https://github.com/dmacvicar/terraform-provider-libvirt/blob/master/website/docs/r/cloudinit.html.markdown
-# Use CloudInit to add our ssh-key to the instance
-# you can add also meta_data field
 
 resource "libvirt_cloudinit_disk" "worker_commoninit" {
   name           = "worker_commoninit.iso"
@@ -217,18 +195,6 @@ module "worker" {
     ]
   time_zone   = var.timezone
   os_img_url  = var.osimg
-
-  console {
-    type        = "pty"
-    target_port = "0"
-    target_type = "serial"
-  }
-  
-  console {
-    type        = "pty"
-    target_type = "virtio"
-    target_port = "1"
-  }
 }
 
 
