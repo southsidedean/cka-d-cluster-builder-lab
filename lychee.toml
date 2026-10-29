@@ -1,0 +1,12 @@
+# Link checker settings for the links workflow.
+
+max_retries = 3
+timeout = 30
+accept = ["200..=299", "429"]
+# Some sites reject non-browser user agents.
+user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
+
+exclude = [
+    # Addresses in the walkthrough's sample output and commands, not real links.
+    "^https?://(localhost|127\\.0\\.0\\.1|192\\.168\\.)",
+]

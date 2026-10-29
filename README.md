@@ -1,4 +1,5 @@
 # cka-d-cluster-builder-lab
+
 **Tom Dean - 10/10/2023**
 
 > **Tested in 0.2.1** on Ubuntu 24.04, Rocky Linux 9.8, and Rocky Linux 10.2 hosts, with Terraform 1.17.1, libvirt provider 0.8.3, and the VM module 1.12.0. The Kubernetes steps further down are from 2023 and still install Kubernetes 1.26 from a package repository that has since shut down; 0.3.0 updates them.
@@ -20,7 +21,7 @@ I had a few requirements:
     - Working this out in my GitLab environment in my home lab
   - Periodically push the updated code to GitHub to share with the world
 - Use Terraform for automation
-   - Flexibility in configuration of cluster via variables
+  - Flexibility in configuration of cluster via variables
 - Leverage KVM/libvirt
   - Execute workloads locally
   - Avoid Cloud expenses
@@ -63,6 +64,7 @@ I like to K.I.S.S. (Keep It Simple, Stupid!) whenever possible, and this was a c
 You can change all kinds of things in the variables.
 
 **Node count, by node type:**
+
 ```bash
 # Cluster sizing: minimum one of each!
 # We can set the number of control plane and worker nodes here
@@ -79,6 +81,7 @@ variable "worker_nodes" {
 ```
 
 **Node name prefix, by node type:**
+
 ```bash
 # Hostname prefixes
 # This controls how the hostnames are generated
@@ -95,6 +98,7 @@ variable "worker_prefix" {
 ```
 
 **Node sizing, by node type:**
+
 ```bash
 # Node sizing
 # Start with the control planes
@@ -133,6 +137,7 @@ variable "worker_memory" {
 ```
 
 **Disk pool, by node type:**
+
 ```bash
 # Disk Pool to use
 # Control Plane
@@ -151,6 +156,7 @@ variable "worker_diskpool" {
 ```
 
 **User/Key information, all nodes:**
+
 ```bash
 # User / Key information
 # Same across all nodes, customize if you wish
@@ -172,6 +178,7 @@ variable "pubkey" {
 ```
 
 **Other information, all nodes:**
+
 ```bash
 # Other node configuration
 # The time zone is a name from "timedatectl list-timezones"
@@ -192,6 +199,7 @@ Feel free to customize as needed.  The virtual machine sizing is based on the re
 How does it work?  The rest is the stuff you should never have to touch, just use the variables to change the configuration.
 
 **Configuring the Terraform provider:**
+
 ```bash
 # Set our Terraform provider here
 # We're going to use libvirt on our local machine
@@ -212,6 +220,7 @@ provider "libvirt" {
 ```
 
 **Build everything and report the details:**
+
 ```bash
 # Module for building our control plane nodes
 
@@ -273,34 +282,34 @@ I have a **Dell Precision T5500** workstation sitting under my desk, which I rec
 - Ubuntu 22.04
 - Dual six-core Xeons
 - Plenty of storage
-    - RAID-1 SSD for system: 250GB
-    - RAID-1 HDD for data: 6TB
+  - RAID-1 SSD for system: 250GB
+  - RAID-1 HDD for data: 6TB
 - Dual 1GB network connections
-    - Public/General network
-    - Private/Data/Application Network
+  - Public/General network
+  - Private/Data/Application Network
 - 72GB of RAM
 - Decent GPU, possible future use?
 
 The workstation was already up and running with Ubuntu 22.04, serving as my "Lab in a Box" server:
 
 - GitLab: *Keep it local!*
-    - Place to do primary development
-        - Release projects/content on GitHub
-    - Local GitLab instance
-    - Publically accessible (*by me*)
-    - CI/CD
-        - KVM/`libvirt` runner
+  - Place to do primary development
+    - Release projects/content on GitHub
+  - Local GitLab instance
+  - Publicly accessible (*by me*)
+  - CI/CD
+    - KVM/`libvirt` runner
 - Terraform
-    - Write automation for labs and projects
-    - Execute workloads on KVM/`libvirt`
+  - Write automation for labs and projects
+  - Execute workloads on KVM/`libvirt`
 - Packer
-    - Create images for projects
-    - Also use `virt-builder` and Image Builder as needed
+  - Create images for projects
+  - Also use `virt-builder` and Image Builder as needed
 - Ansible
-    - Might use in future projects, or for lab infrastructure
+  - Might use in future projects, or for lab infrastructure
 - Cockpit
-    - Web-based server information and management
-    - For when you want to treat your "lab in the box" as an appliance and skip the CLI
+  - Web-based server information and management
+  - For when you want to treat your "lab in the box" as an appliance and skip the CLI
 
 Terraform and KVM/`libvirt` are already installed and configured on my server.  All I needed to do was to enable `dnsmasq` and change the subnet on the `default` KVM network.
 
@@ -346,10 +355,11 @@ Before we get started, we're going to need to confirm that we have some things i
 
 I've written quite a bit of infrastructure-as-code in Terraform, using AWS, for lab environments and projects in the past, so I decided to try my hand with Terraform + KVM/`libvirt` to provide IaC automation for my projects.
 
-To install, you first need to add the repositories for Hashicorp, as described in the link above.  Follow the steps for your operating system.  Once the repositiories have been added, you can install Terraform as instructed in the links above.
+To install, you first need to add the repositories for Hashicorp, as described in the link above.  Follow the steps for your operating system.  Once the repositories have been added, you can install Terraform as instructed in the links above.
 
 **You can verify your installation by checking the version of Terraform:**
-```
+
+```bash
 terraform --version
 
 ```
@@ -373,6 +383,7 @@ At the bottom of the "Lab in a Box" stack, our foundation, is `libvirt`.  We're 
 The exact set of steps required to install the KVM/`libvirt` components will vary, based on your Linux distribution.  I've included links for Ubuntu and RHEL variants above, but you should be able to Google it and get instructions.  Remember, make sure you can install GitLab on your distribution as well.  If you're using some obscure distribution, you might be out of luck.
 
 **Once you have KVM/`libvirt` installed, let's give it a test:**
+
 ```bash
 virsh --help | more
 
@@ -381,6 +392,7 @@ virsh --help | more
 You should get help for the `virsh` command-line utility, which is what we use to manage our virtual machine environment.
 
 **Let's check our system for virtual machines:**
+
 ```bash
 virsh list --all
 
@@ -423,6 +435,7 @@ RHEL, Rocky Linux, and AlmaLinux use SELinux instead, and a pool in `/var/lib/li
 In order for our cluster to work, we need proper name resolution on our `default` bridge network.  We can accomplish this by configuring `dnsmasq` on our `default` bridge network.
 
 **Let's take a look at our `default` bridge network:**
+
 ```bash
 virsh net-dumpxml default
 
@@ -431,6 +444,7 @@ virsh net-dumpxml default
 I'm going to show you my 'finished' network configuration below.
 
 **EXAMPLE OUTPUT:**
+
 ```bash
 <network>
   <name>default</name>
@@ -460,12 +474,14 @@ I'm going to show you my 'finished' network configuration below.
 *If you need to edit your network, use the following process.  Use the example configuration above as a guide.*
 
 **Take down the `default` network:**
+
 ```bash
 virsh net-destroy default
 
 ```
 
 **Edit the `default` network:**
+
 ```bash
 virsh net-edit default
 
@@ -474,6 +490,7 @@ virsh net-edit default
 *Make your edits as needed.*
 
 **Deploy the new `default` network configuration:**
+
 ```bash
 virsh net-start default
 
@@ -482,6 +499,7 @@ virsh net-start default
 *I would do this without any virtual machines deployed to the `default` network.*
 
 **Again, if you want to do one final check of your `default` network configuration:**
+
 ```bash
 virsh net-dumpxml default
 
@@ -498,6 +516,7 @@ You're going to need a storage pool for your virtual machines.  The Terraform fi
 If you need to create a storage pool, reference [Creating a Directory-based Storage Pool with virsh](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/virtualization_administration_guide/sect-virtualization-storage_pools-creating-local_directories-virsh).  It'll get you up and running in no time.
 
 **Check for the `default` storage pool:**
+
 ```bash
 virsh pool-list
 
@@ -506,6 +525,7 @@ virsh pool-list
 If you have one or more storage pools configured, you will see them in the output.
 
 **SAMPLE OUTPUT:**
+
 ```bash
  Name      State    Autostart
 -------------------------------
@@ -514,11 +534,13 @@ If you have one or more storage pools configured, you will see them in the outpu
 ```
 
 **Checking the `default` storage pool configuration:**
+
 ```bash
 virsh pool-dumpxml default
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 <pool type='dir'>
   <name>default</name>
@@ -540,6 +562,7 @@ virsh pool-dumpxml default
 ```
 
 You can see that I've configured my `default` storage pool as a directory-based pool, that is backed by a LVM volume mounted at `/media/virtual-machines`:
+
 ```bash
 Filesystem                                  Size  Used Avail Use% Mounted on
 /dev/mapper/monolith_data-virtual_machines  461G   28K  438G   1% /media/virtual-machines
@@ -554,12 +577,14 @@ Filesystem                                  Size  Used Avail Use% Mounted on
 Head on over to the `cka-d-cluster-builder-lab` GitHub repository in the link above.  Go ahead and clone the repository to a directory of your choice.
 
 **Clone repository:**
+
 ```bash
 git clone https://github.com/southsidedean/cka-d-cluster-builder-lab.git
 
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 Cloning into 'cka-d-cluster-builder-lab'...
 remote: Enumerating objects: 18, done.
@@ -571,12 +596,14 @@ Resolving deltas: 100% (1/1), done.
 ```
 
 **Change directory into the repository directory:**
+
 ```bash
 cd cka-d-cluster-builder-lab
 
 ```
 
 **Let's take a look at the Terraform code:**
+
 ```bash
 more cka-builder.tf
 
@@ -595,12 +622,14 @@ You can see that the code is configurable via the numerous variables at the begi
 Ok, let's deploy a cluster!
 
 **First, we need to initialize our Terraform environment:**
+
 ```bash
 terraform init
 
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 Initializing the backend...
 Initializing modules...
@@ -635,12 +664,14 @@ commands will detect it and remind you to do so if necessary.
 ```
 
 **Next, let's generate a Terraform plan:**
+
 ```bash
 terraform plan -out cka-plan.plan
 
 ```
 
-**SAMPLE OUPUT EXCERPT:**
+**SAMPLE OUTPUT EXCERPT:**
+
 ```bash
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -684,6 +715,7 @@ Changes to Outputs:
 This will show us what Terraform is going to build, and will validate our code for errors.  With no errors, let's proceed with a `terraform apply`.
 
 **Deploy cluster:**
+
 ```bash
 terraform apply -auto-approve cka-plan.plan
 
@@ -692,6 +724,7 @@ terraform apply -auto-approve cka-plan.plan
 Terraform will handle all the heavy lifting for us and will build the environment as we requested.
 
 **SAMPLE OUTPUT EXCERPT:**
+
 ```bash
 ...
 module.worker.libvirt_domain.virt-machine[1] (remote-exec): Connected!
@@ -734,12 +767,14 @@ worker-nodes = {
 With a clean Terraform execution under our belt, we can proceed and check for our virtual machines using the `virsh list` command.
 
 **Let's check our system for virtual machines:**
+
 ```bash
 virsh list --all
 
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
  Id   Name                                State
 ----------------------------------------------------
@@ -749,12 +784,14 @@ virsh list --all
 ```
 
 **If you'd like to see the IP addresses for the nodes:**
+
 ```bash
 virsh net-dhcp-leases default
 
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
  Expiry Time           MAC address         Protocol   IP address      Hostname           Client ID or DUID
 ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -770,12 +807,14 @@ virsh net-dhcp-leases default
 When you're done with the cluster, you use the `terraform destroy` command to tear down the cluster.
 
 **Destroy cluster:**
+
 ```bash
 terraform destroy -auto-approve
 
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 ...
 module.worker.libvirt_volume.volume-qcow2[0]: Destruction complete after 0s
@@ -797,11 +836,13 @@ Destroy complete! Resources: 11 destroyed.
 To get started, we're going to log into each of our nodes with a separate connection (window/tab/etc), and become the `root` user.
 
 **Log in to each node using SSH:**
+
 ```bash
 ssh -i ~/.ssh/id_ed25519 ubuntu@<NODE_IP_ADDRESS>
 ```
 
 **Become the `root` user on all nodes:**
+
 ```bash
 sudo su
 ```
@@ -823,6 +864,7 @@ When deploying a Kubernetes cluster, you have choices with regard to your contai
 ***Perform the following steps on all nodes.***
 
 **Uninstall existing versions of Docker/`containerd`:**
+
 ```bash
 apt-get update
 apt-get remove docker docker.io containerd runc
@@ -830,6 +872,7 @@ apt-get remove docker docker.io containerd runc
 ```
 
 **Install software prerequisites, if needed:**
+
 ```bash
 apt-get update
 apt-get install -y ca-certificates curl gnupg
@@ -837,6 +880,7 @@ apt-get install -y ca-certificates curl gnupg
 ```
 
 **Add Docker Repository GPG Keys:**
+
 ```bash
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -845,12 +889,14 @@ chmod a+r /etc/apt/keyrings/docker.gpg
 ```
 
 **Add Docker Repository:**
+
 ```bash
 echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 ```
 
 **Install Docker/`containerd`:**
+
 ```bash
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
@@ -858,12 +904,14 @@ apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin do
 ```
 
 **Add the `ubuntu` user to the `docker` group:**
+
 ```bash
 usermod -aG docker ubuntu
 
 ```
 
 **Enable/Start Docker:**
+
 ```bash
 systemctl enable --now docker
 systemctl status docker
@@ -871,6 +919,7 @@ systemctl status docker
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 Synchronizing state of docker.service with SysV service script with /lib/systemd/systemd-sysv-install.
 Executing: /lib/systemd/systemd-sysv-install enable docker
@@ -903,6 +952,7 @@ We should see the `docker.service` service `enabled` and `active` on all nodes. 
 There's an issue with the stock `/etc/containerd/config.toml` file and Kubernetes 1.26+.  We need to set the configuration file aside and restart the `containerd` service.
 
 **Backup/disable existing `/etc/containerd/config.toml`:**
+
 ```bash
 mv /etc/containerd/config.toml /etc/containerd/config.toml.bak
 systemctl restart containerd
@@ -910,6 +960,7 @@ systemctl restart containerd
 ```
 
 **Configure `/etc/containerd/config.toml`:**
+
 ```bash
 containerd config default > /etc/containerd/config.toml
 sed -i '/SystemdCgroup/s/false/true/' /etc/containerd/config.toml
@@ -917,6 +968,7 @@ sed -i '/sandbox_image/s/registry.k8s.io\/pause:3.6/registry.k8s.io\/pause:3.2/'
 systemctl restart containerd
 
 ```
+
 ***Sweet, we have a container runtime installed!  What's next?***
 
 #### Docker/`containerd`: Linux System Configuration Tasks
@@ -924,6 +976,7 @@ systemctl restart containerd
 ***Perform the following steps on all nodes.***
 
 **Configure the `systemd` `cgroup` driver:**
+
 ```bash
 touch /etc/docker/daemon.json
 cat <<EOF > /etc/docker/daemon.json
@@ -935,12 +988,14 @@ docker info | grep Cgroup
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
  Cgroup Driver: systemd
  Cgroup Version: 2
 ```
 
 **Load the overlay and br_netfilter modules:**
+
 ```bash
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
@@ -953,6 +1008,7 @@ lsmod | grep -E "overlay|br_netfilter"
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 overlay
 br_netfilter
@@ -962,6 +1018,7 @@ overlay               151552  0
 ```
 
 **Configure kernel parameters for bridging and IPv4 forwarding:**
+
 ```bash
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables  = 1
@@ -972,6 +1029,7 @@ EOF
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 net.bridge.bridge-nf-call-iptables  = 1
 net.bridge.bridge-nf-call-ip6tables = 1
@@ -979,11 +1037,13 @@ net.ipv4.ip_forward                 = 1
 ```
 
 **Apply kernel parameters:**
+
 ```bash
 sysctl --system
 ```
 
 **SAMPLE OUTPUT EXCERPT:**
+
 ```bash
 ...
 * Applying /etc/sysctl.d/k8s.conf ...
@@ -1008,6 +1068,7 @@ net.ipv4.ip_forward = 1
 ***Perform the following steps on all nodes.***
 
 **Add CRI-O Repositories:**
+
 ```bash
 echo "deb [signed-by=/usr/share/keyrings/libcontainers-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg] https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/1.22/xUbuntu_22.04/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:1.22.list
@@ -1015,6 +1076,7 @@ echo "deb [signed-by=/usr/share/keyrings/libcontainers-crio-archive-keyring.gpg]
 ```
 
 **Add CRI-O Repository GPG Keys:**
+
 ```bash
 mkdir -p /usr/share/keyrings
 curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/Release.key | gpg --dearmor -o /usr/share/keyrings/libcontainers-archive-keyring.gpg
@@ -1023,6 +1085,7 @@ curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/
 ```
 
 **Install CRI-O Packages:**
+
 ```bash
 apt-get update
 apt-get install -y cri-o cri-o-runc
@@ -1030,6 +1093,7 @@ apt-get install -y cri-o cri-o-runc
 ```
 
 **Set the `cgroup` driver:**
+
 ```bash
 touch /etc/crio/crio.conf.d/02-cgroup-manager.conf
 cat <<EOF > /etc/crio/crio.conf.d/02-cgroup-manager.conf
@@ -1041,6 +1105,7 @@ EOF
 ```
 
 **Override the Pause Container Image:**
+
 ```bash
 touch /etc/crio/crio.conf.d/03-cgroup-pause.conf
 cat <<EOF > /etc/crio/crio.conf.d/03-cgroup-pause.conf
@@ -1051,6 +1116,7 @@ EOF
 ```
 
 **Sync CRI-O and distribution runc versions:**
+
 ```bash
 touch /etc/crio/crio.conf.d/04-crio-runtime.conf
 cat <<EOF > /etc/crio/crio.conf.d/04-crio-runtime.conf
@@ -1063,6 +1129,7 @@ EOF
 ```
 
 **Enable/start the CRI-O service:**
+
 ```bash
 systemctl enable --now crio
 systemctl status crio
@@ -1076,6 +1143,7 @@ systemctl status crio
 *Perform the following steps on all nodes.*
 
 **Load the `overlay` and `br_netfilter` modules:**
+
 ```bash
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
@@ -1088,6 +1156,7 @@ lsmod | grep -E "overlay|br_netfilter"
 ```
 
 **Configure kernel parameters for bridging and IPv4 forwarding:**
+
 ```bash
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables  = 1
@@ -1098,6 +1167,7 @@ EOF
 ```
 
 **Apply kernel parameters:**
+
 ```bash
 sysctl --system
 ```
@@ -1117,24 +1187,29 @@ Now that all our nodes are prepared and have a container runtime installed and r
 ***Perform the following steps on all nodes.***
 
 **Update `apt` index and install prerequisites:**
+
 ```bash
 apt-get update
 apt-get install -y apt-transport-https ca-certificates curl
 
 ```
+
 **Download Kubernetes Repository GPG Key:**
+
 ```bash
 curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 
 ```
 
 **Add Kubernetes Repository:**
+
 ```bash
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
 ```
 
 **Let's see which versions of Kubernetes are available, for major version 1.26:**
+
 ```bash
 apt-get update
 apt-cache madison kubeadm | grep 1.26
@@ -1142,6 +1217,7 @@ apt-cache madison kubeadm | grep 1.26
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
    kubeadm |  1.26.4-00 | https://apt.kubernetes.io kubernetes-xenial/main amd64 Packages
    kubeadm |  1.26.3-00 | https://apt.kubernetes.io kubernetes-xenial/main amd64 Packages
@@ -1153,6 +1229,7 @@ apt-cache madison kubeadm | grep 1.26
 We'll go ahead and install version 1.26.3.  That will allow us to practice upgrading to version 1.26.4, which is the latest at this time.
 
 **Refresh/install Kubernetes packages:**
+
 ```bash
 apt-get update
 apt-get install -y kubelet=1.26.3-00 kubeadm=1.26.3-00 kubectl=1.26.3-00
@@ -1160,12 +1237,14 @@ apt-get install -y kubelet=1.26.3-00 kubeadm=1.26.3-00 kubectl=1.26.3-00
 ```
 
 **Lock down Kubernetes package versions:**
+
 ```bash
 apt-mark hold kubelet kubeadm kubectl
 
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 kubelet set on hold.
 kubeadm set on hold.
@@ -1177,6 +1256,7 @@ kubectl set on hold.
 ***Perform the following step on the Control Plane node.***
 
 **Pull Kubernetes Container Images:**
+
 ```bash
 kubeadm config images pull --kubernetes-version 1.26.3
 
@@ -1187,6 +1267,7 @@ kubeadm config images pull --kubernetes-version 1.26.3
 Now that all the Linux parts are done, we'll wrap up on all the nodes.
 
 **Exit the `root` user shell:**
+
 ```bash
 exit
 ```
@@ -1199,17 +1280,19 @@ exit
 
 Now, we're going to use `kubeadm` to configure and deploy Kubernetes on the nodes we've set up.
 
-#### Inititalize the Control Plane Node
+#### Initialize the Control Plane Node
 
 ***Perform the following steps on the Control Plane node.***
 
 **Initialize Control Plane Node:**
+
 ```bash
 sudo kubeadm init --kubernetes-version 1.26.3
 
 ```
 
 **EXAMPLE OUTPUT:**
+
 ```bash
 [init] Using Kubernetes version: v1.26.3
 [preflight] Running pre-flight checks
@@ -1281,12 +1364,13 @@ Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
 Then you can join any number of worker nodes by running the following on each as root:
 
 kubeadm join 10.0.1.37:6443 --token o4v4rg.pqhucyn7ff0qap01 \
-	--discovery-token-ca-cert-hash sha256:01fabf406bce39943a486985b96330dda53bf6902700913c4b461b79a9852623
+ --discovery-token-ca-cert-hash sha256:01fabf406bce39943a486985b96330dda53bf6902700913c4b461b79a9852623
 ```
 
 #### Configure `kubectl`: On the Control Plane Node
 
 **Configure `kubectl`:**
+
 ```bash
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -1295,12 +1379,14 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
 **Checking our work:**
+
 ```bash
 kubectl get nodes
 
 ```
 
 **EXAMPLE OUTPUT:**
+
 ```bash
 NAME               STATUS     ROLES           AGE    VERSION
 control-plane-01   NotReady   control-plane   2m2s   v1.26.3
@@ -1315,6 +1401,7 @@ control-plane-01   NotReady   control-plane   2m2s   v1.26.3
 ***Perform the following steps on the Control Plane node.***
 
 **Download the Calico CNI manifest:**
+
 ```bash
 curl https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/calico.yaml -O
 ```
@@ -1322,12 +1409,14 @@ curl https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/ca
 If we wanted to customize our Calico deployment, we could edit the `calico.yaml` manifest.  We're going to use it as-is.
 
 **Deploy the Calico manifest:**
+
 ```bash
 kubectl apply -f calico.yaml
 
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 poddisruptionbudget.policy/calico-kube-controllers created
 serviceaccount/calico-kube-controllers created
@@ -1359,12 +1448,14 @@ deployment.apps/calico-kube-controllers created
 ```
 
 **Checking our work:**
+
 ```bash
 watch -n 1 kubectl get nodes
 
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 NAME               STATUS   ROLES           AGE    VERSION
 control-plane-01   Ready    control-plane   3m4s   v1.26.3
@@ -1381,22 +1472,26 @@ Now that we have a functional Control Plane, we can join the worker nodes to the
 ***Perform the following steps on all worker nodes.***
 
 EXAMPLE:
+
 ```bash
 kubeadm join 10.0.1.37:6443 --token o4v4rg.pqhucyn7ff0qap01 --discovery-token-ca-cert-hash sha256:01fabf406bce39943a486985b96330dda53bf6902700913c4b461b79a9852623
 ```
 
 **If you can't remember the join command, use the following command to retrieve it:**
+
 ```bash
 sudo kubeadm token create --print-join-command
 
 ```
 
 Join **each worker node** to the cluster, using `sudo`:
+
 ```bash
 sudo kubeadm join ...  <-- FILL THIS IN WITH YOUR JOIN COMMAND
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 d46e1183c8343157924
 [preflight] Running pre-flight checks
@@ -1419,6 +1514,7 @@ Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
 ***Perform the following steps on the Control Plane node.***
 
 **Checking our work:**
+
 ```bash
 watch -n 1 kubectl get nodes
 
@@ -1427,6 +1523,7 @@ watch -n 1 kubectl get nodes
 Wait until all the nodes are in a `Ready` state, as shown below.
 
 **SAMPLE OUTPUT:**
+
 ```bash
 Every 1.0s: kubectl get nodes       control-plane-01: Thu Apr 13 16:36:41 2023
 
@@ -1439,11 +1536,13 @@ worker-node-02     Ready    <none>          9m20s   v1.26.3
 Once all nodes are in the `Ready` state, exit the `watch` command with `CRTL-C`.
 
 **Taking a look at all the resources in our cluster:**
+
 ```bash
 kubectl get all -A
 ```
 
 **EXAMPLE OUTPUT:**
+
 ```bash
 NAMESPACE     NAME                                           READY   STATUS    RESTARTS   AGE
 kube-system   pod/calico-kube-controllers-5857bf8d58-jbpkt   1/1     Running   0          3m26s
@@ -1479,13 +1578,14 @@ kube-system   replicaset.apps/coredns-787d4945fb                   2         2  
 
 ***There you have it!  A Kubernetes cluster, assembled with `kubeadm`.***
 
-## OPTIONAL: Configure `kubectl`: On Your Virtualzation Host
+## OPTIONAL: Configure `kubectl`: On Your Virtualization Host
 
 You might want to manage your cluster using `kubectl` on your virtualization host.  This is a common use case scenario that is easy to implement.
 
 If you don't have `kubectl` installed on your virtualization host, install it now.
 
 **Copy `KUBECONFIG` to KVM host:**
+
 ```bash
 scp -i ~/.ssh/id_ed25519 ubuntu@<CONTROL_PLANE_IP>:~/.kube/config control-plane-01.conf
 KUBECONFIG=control-plane-01.conf ; export KUBECONFIG
@@ -1495,12 +1595,14 @@ KUBECONFIG=control-plane-01.conf ; export KUBECONFIG
 If you want to get totally fancy and create a context for it, feel free to indulge your fancy.  I'm keeping things on-point here and not going down that rabbit hole.
 
 **Checking our work:**
+
 ```bash
 kubectl get nodes
 
 ```
 
 **EXAMPLE OUTPUT:**
+
 ```bash
 NAME               STATUS   ROLES           AGE   VERSION
 control-plane-01   Ready    control-plane   43m   v1.26.3
@@ -1515,12 +1617,14 @@ When you're done with the cluster, you can `unset KUBECONFIG` to stop using the 
 When you're done with the cluster, you use the `terraform destroy` command to tear down the cluster.
 
 **Destroy cluster:**
+
 ```bash
 terraform destroy -auto-approve
 
 ```
 
 **SAMPLE OUTPUT:**
+
 ```bash
 ...
 module.worker.libvirt_volume.volume-qcow2[0]: Destruction complete after 0s
@@ -1536,6 +1640,7 @@ Destroy complete! Resources: 11 destroyed.
 ```
 
 **Checking our work:**
+
 ```bash
 virsh list --all
 

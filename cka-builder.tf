@@ -130,6 +130,8 @@ variable "graphics" {
 # We're going to use libvirt on our local machine
 
 terraform {
+  required_version = ">= 1.0"
+
   required_providers {
     libvirt = {
       source = "dmacvicar/libvirt"

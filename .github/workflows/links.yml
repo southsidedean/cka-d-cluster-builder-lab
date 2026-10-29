@@ -1,0 +1,29 @@
+name: links
+
+# The README links to a lot of outside docs, which move. Runs on pull requests and weekly,
+# but isn't a required check: an outside site that's down shouldn't block a merge.
+
+on:
+  pull_request:
+    paths: ["*.md", lychee.toml]
+  schedule:
+    - cron: "47 6 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  lychee:
+    name: Links
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --config lychee.toml "*.md"
+          fail: true

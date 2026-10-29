@@ -1,0 +1,8 @@
+config:
+  MD013: false # line length: prose paragraphs are single lines
+  MD033: false # inline HTML
+  MD036: false # the walkthrough labels each step in bold ("**Log in to each node:**")
+
+ignores:
+  - CLAUDE.md # local-only, excluded from git
+  - .backups/**

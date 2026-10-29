@@ -1,0 +1,6 @@
+# Terraform working files and state, which hold details of your own hosts
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log

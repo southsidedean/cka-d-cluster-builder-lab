@@ -1,0 +1,24 @@
+# Keeps the actions in .github/workflows (pinned to exact commits) and the Terraform
+# provider and module in cka-builder.tf up to date.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    # One pull request for all of them, and only for releases at least a week old.
+    groups:
+      actions:
+        patterns: ["*"]
+    cooldown:
+      default-days: 7
+  - package-ecosystem: terraform
+    directory: /
+    schedule:
+      interval: monthly
+    ignore:
+      # 0.9 is a rewrite that the VM module doesn't support.
+      - dependency-name: dmacvicar/libvirt
+        versions: [">= 0.9.0"]
+    cooldown:
+      default-days: 7
