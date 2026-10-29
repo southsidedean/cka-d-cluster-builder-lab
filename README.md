@@ -73,7 +73,7 @@ I like to K.I.S.S. (Keep It Simple, Stupid!) whenever possible, and this was a c
 You can change all kinds of things in the variables at the top of `cka-builder.tf`:
 
 | Variable | Default | What it sets |
-|---|---|---|
+| --- | --- | --- |
 | `control_plane_nodes`, `worker_nodes` | `1`, `2` | How many nodes of each kind (at least one of each) |
 | `cp_prefix`, `worker_prefix` | `control-plane-`, `worker-node-` | Hostname prefixes; nodes are numbered from `01` |
 | `cp_cpu`, `worker_cpu` | `2` | vCPUs per node |
