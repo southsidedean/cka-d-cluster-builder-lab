@@ -1,0 +1,28 @@
+name: upstream
+
+# Every week: has the lab fallen behind? Checks the Kubernetes version the README installs
+# and upgrades to, the Calico version, and the Ubuntu image in cka-builder.tf against what's
+# current (scripts/upstream-check.py). Dependabot covers the Terraform provider and module.
+# Not on pull requests, since it depends on outside sites.
+
+on:
+  schedule:
+    - cron: "53 6 * * 3"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  versions:
+    name: Lab versions are current
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: python3 scripts/upstream-check.py
+        env:
+          GH_TOKEN: ${{ github.token }}  # for the GitHub API's rate limit

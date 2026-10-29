@@ -1,0 +1,35 @@
+name: Something isn't working
+description: Terraform or a step in the README isn't doing what the README says.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Please remove anything private before posting, such as host names, IP addresses on your own network, and paths that include your name.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what you saw, and what you expected instead. Paste the error.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Lab version
+      description: The release you used (for example 0.2.1), or the commit if you're on main.
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Host operating system
+      placeholder: e.g. Ubuntu 24.04, Rocky Linux 10.2
+    validations:
+      required: true
+  - type: textarea
+    id: versions
+    attributes:
+      label: Tool versions
+      description: The output of `terraform version` and `virsh version`.
+      render: text

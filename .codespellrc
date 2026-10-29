@@ -1,0 +1,4 @@
+[codespell]
+skip = .git,.backups,.terraform,*.lock.hcl
+# Quoted as written from the VM module's registry page.
+ignore-words-list = complient
