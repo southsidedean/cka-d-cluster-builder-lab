@@ -7,6 +7,8 @@ accept = ["200..=299", "429"]
 user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
 
 exclude = [
+    # Red Hat's docs answer every automated request with 403, even for pages that exist.
+    "^https://(access|docs)\\.redhat\\.com/",
     # Addresses in the walkthrough's sample output and commands, not real links.
     "^https?://(localhost|127\\.0\\.0\\.1|192\\.168\\.)",
 ]
