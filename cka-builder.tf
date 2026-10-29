@@ -115,7 +115,7 @@ variable "timezone" {
 
 variable "osimg" {
   type    = string
-  default = "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img"
+  default = "https://cloud-images.ubuntu.com/resolute/current/resolute-server-cloudimg-amd64.img"
 }
 
 # Graphics type for the VM consoles: "vnc" or "spice"

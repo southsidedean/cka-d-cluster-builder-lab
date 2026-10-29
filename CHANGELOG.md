@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.3.0 (unreleased)
+
+The walkthrough is current again: Ubuntu 26.04 nodes, Kubernetes 1.36 from `pkgs.k8s.io`, and a new section on upgrading the cluster to 1.37. Every step was run end to end on fresh nodes, and the sample output comes from those runs.
+
+### Upgrading from 0.2.1
+
+Run `terraform destroy` on any nodes built with 0.2.1 before you pull this release, then `terraform apply` for fresh 26.04 nodes. The only Terraform change is the `osimg` default.
+
+### New
+
+- The nodes run Ubuntu 26.04 instead of 22.04.
+- Kubernetes installs from the `pkgs.k8s.io` repository for 1.36, replacing `apt.kubernetes.io`, which has shut down.
+- An upgrade section takes the cluster from 1.36 to 1.37 the way the CKA expects: the Control Plane first, then each worker, switching each node's package repository to the new minor version.
+- `containerd` comes from Ubuntu's own package, with the `systemd` cgroup driver. CRI-O is now a short optional section that uses CRI-O's current repositories and covers its part of the upgrade.
+- Calico 3.33.0, with the pods on `10.244.0.0/16`, so libvirt's stock `192.168.122.0/24` network works without changes.
+- A test workload (two `nginx` pods behind a Service) to check the cluster before and after the upgrade.
+- A table of the Terraform variables, a "What You Need" section, and install commands for KVM and `libvirt` on Ubuntu and on RHEL, Rocky Linux, and AlmaLinux.
+- A logo.
+
+### Fixes
+
+- The README's storage pool and KVM links pointed to RHEL 6 and RHEL 8 documentation. It now gives the `virsh` commands directly.
+- The README covers a DNS server on the host that holds libvirt's address and keeps the `default` network from starting.
+
+### Removed
+
+- The 2023 notes about the "Lab in a Box" server, and the Docker steps that came with the old `containerd` setup.
+
 ## 0.2.1 (2026-10-29)
 
 The Terraform builds the lab's VMs again, on Ubuntu and on RHEL-family hosts. The Kubernetes steps in the README are still the 2023 ones; 0.3.0 updates them.

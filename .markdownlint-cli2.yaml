@@ -2,6 +2,9 @@ config:
   MD013: false # line length: prose paragraphs are single lines
   MD033: false # inline HTML
   MD036: false # the walkthrough labels each step in bold ("**Log in to each node:**")
+  MD041: false # the README opens with the logo, above the title
+  MD024:
+    siblings_only: true # each CHANGELOG release has its own New and Fixes
 
 ignores:
   - CLAUDE.md # local-only, excluded from git
