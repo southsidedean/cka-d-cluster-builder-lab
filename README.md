@@ -1,6 +1,8 @@
 # cka-d-cluster-builder-lab
 **Tom Dean - 10/10/2023**
 
+> **Tested in 0.2.1** on Ubuntu 24.04, Rocky Linux 9.8, and Rocky Linux 10.2 hosts, with Terraform 1.17.1, libvirt provider 0.8.3, and the VM module 1.12.0. The Kubernetes steps further down are from 2023 and still install Kubernetes 1.26 from a package repository that has since shut down; 0.3.0 updates them.
+
 ## Introduction
 
 ### The Need: A Quick and Repeatable Local Kubernetes Cluster Using KVM
@@ -54,7 +56,7 @@ So, by using one invocation of the module for Control Plane hosts, and one for W
 
 ### The Details: A Single-File Terraform Solution
 
-[Terraform code](cka-test.tf)
+[Terraform code](cka-builder.tf)
 
 I like to K.I.S.S. (Keep It Simple, Stupid!) whenever possible, and this was a case where I could put everything into a single file.  Yeah, yeah, yeah, why all the variables when we could just set them down in the module?  Because, I like to separate the input from the machinery.
 
@@ -172,10 +174,11 @@ variable "pubkey" {
 **Other information, all nodes:**
 ```bash
 # Other node configuration
+# The time zone is a name from "timedatectl list-timezones"
 
 variable "timezone" {
   type = string
-  default = "CST"
+  default = "America/Chicago"
 }
 
 variable "osimg" {
@@ -197,6 +200,8 @@ terraform {
   required_providers {
     libvirt = {
       source = "dmacvicar/libvirt"
+      # 0.9 is a rewrite that the VM module doesn't support
+      version = "~> 0.8.3"
     }
   }
 }
@@ -212,7 +217,7 @@ provider "libvirt" {
 
 module "controlplane" {
   source  = "MonolithProjects/vm/libvirt"
-  version = "1.10.0"
+  version = "1.12.0"
 
   vm_hostname_prefix = var.cp_prefix
   vm_count    = var.control_plane_nodes
@@ -234,7 +239,7 @@ module "controlplane" {
 
 module "worker" {
   source  = "MonolithProjects/vm/libvirt"
-  version = "1.10.0"
+  version = "1.12.0"
 
   vm_hostname_prefix = var.worker_prefix
   vm_count    = var.worker_nodes
@@ -305,7 +310,7 @@ Terraform and KVM/`libvirt` are already installed and configured on my server.  
 
 [GitHub: cka-d-cluster-builder-lab](https://github.com/southsidedean/cka-d-cluster-builder-lab)
 
-[Terraform code](cka-test.tf)
+[Terraform code](cka-builder.tf)
 
 [GitHub: self-hosted-gitlab-libvirt](https://github.com/southsidedean/self-hosted-gitlab-libvirt)
 
@@ -313,9 +318,9 @@ Terraform and KVM/`libvirt` are already installed and configured on my server.  
 
 [GitHub: dmacvicar/terraform-provider-libvirt](https://github.com/dmacvicar/terraform-provider-libvirt)
 
-[GitHub: MonolithProjects/terraform-libvirt-vm](https://github.com/MonolithProjects/terraform-libvirt-vm/tree/1.10.0)
+[GitHub: MonolithProjects/terraform-libvirt-vm](https://github.com/MonolithProjects/terraform-libvirt-vm/tree/1.12.0)
 
-[Hashicorp Terraform Registry: Libvirt Provider](https://registry.terraform.io/providers/multani/libvirt/latest/docs)
+[Hashicorp Terraform Registry: Libvirt Provider](https://registry.terraform.io/providers/dmacvicar/libvirt/0.8.3/docs)
 
 [kubernetes.io: Bootstrapping clusters with kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/)
 
@@ -382,6 +387,36 @@ virsh list --all
 ```
 
 ***We shouldn't see any virtual machines at this point, unless you have some running already, of course.  We can move on to configuring our `default` `libvirt` network.***
+
+### `mkisofs` and `xsltproc`
+
+The libvirt provider builds each node's cloud-init disk with `mkisofs`, and the VM module uses `xsltproc` to adjust each VM's definition. Install both before you run Terraform.
+
+**Ubuntu:**
+
+```bash
+sudo apt-get install -y genisoimage xsltproc
+```
+
+**RHEL, Rocky Linux, or AlmaLinux 9 and 10** (`xorriso` provides `mkisofs` there):
+
+```bash
+sudo dnf install -y xorriso libxslt
+```
+
+The VMs use VNC for their graphical console. RHEL 9 and later dropped SPICE, and VNC works on every host. If you want SPICE on a host that still has it, set `graphics = "spice"`.
+
+**Ubuntu with a storage pool outside `/var/lib/libvirt/images`:** AppArmor only lets QEMU read VM images from libvirt's own folders, so the VMs fail to start with "Permission denied" on the `-base.qcow2` image. Allow your pool's folder (here `/media/content/virtual-machines`) with a local rule:
+
+```bash
+sudo mkdir -p /etc/apparmor.d/local/abstractions
+echo '/media/content/virtual-machines/** rwk,' | sudo tee /etc/apparmor.d/local/abstractions/libvirt-qemu
+sudo systemctl reload apparmor
+```
+
+RHEL, Rocky Linux, and AlmaLinux use SELinux instead, and a pool in `/var/lib/libvirt/images` needs no change there.
+
+**If `terraform apply` fails partway,** the provider can leave the VMs defined in libvirt, and the next apply stops with "domain ... already exists". Run `terraform destroy`, then remove the leftovers with `virsh undefine <name>` (`virsh list --all` shows them) before you try again.
 
 ### KVM: Configure `default` `libvirt` Network
 
@@ -543,11 +578,11 @@ cd cka-d-cluster-builder-lab
 
 **Let's take a look at the Terraform code:**
 ```bash
-more cka-test.tf
+more cka-builder.tf
 
 ```
 
-[Terraform code](cka-test.tf)
+[Terraform code](cka-builder.tf)
 
 You can see that the code is configurable via the numerous variables at the beginning of the file.  By default, a cluster will be created with a single control plane node and two worker nodes.  Feel free to adjust the values as you see fit.
 
@@ -569,9 +604,9 @@ terraform init
 ```bash
 Initializing the backend...
 Initializing modules...
-Downloading registry.terraform.io/MonolithProjects/vm/libvirt 1.10.0 for controlplane...
+Downloading registry.terraform.io/MonolithProjects/vm/libvirt 1.12.0 for controlplane...
 - controlplane in .terraform/modules/controlplane
-Downloading registry.terraform.io/MonolithProjects/vm/libvirt 1.10.0 for worker...
+Downloading registry.terraform.io/MonolithProjects/vm/libvirt 1.12.0 for worker...
 - worker in .terraform/modules/worker
 
 Initializing provider plugins...
