@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0 (2026-10-29)
 
 The walkthrough is current again: Ubuntu 26.04 nodes, Kubernetes 1.36 from `pkgs.k8s.io`, and a new section on upgrading the cluster to 1.37. Every step was run end to end on fresh nodes, and the sample output comes from those runs.
 
