@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.1 (unreleased)
+## 0.2.1 (2026-10-29)
 
 The Terraform builds the lab's VMs again, on Ubuntu and on RHEL-family hosts. The Kubernetes steps in the README are still the 2023 ones; 0.3.0 updates them.
 
