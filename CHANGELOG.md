@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.1 (unreleased)
+
+Documentation only: no Terraform or command changes.
+
+### Fixes
+
+- The README says what to expect from two messages during the upgrade: draining a node can retry for about 45 seconds on Calico's disruption budget, and with CRI-O, `kubeadm upgrade plan` warns about the `pause` image until CRI-O is upgraded.
+- The README's introduction is shorter in a few places and no longer describes a GitLab workflow the lab doesn't use.
+
+### Testing
+
+- The 0.3.0 Terraform was tested on Rocky Linux 9.8 and 10.2 hosts, and the CRI-O path was run end to end a second time, from 1.36 to 1.37.
+
 ## 0.3.0 (2026-10-29)
 
 The walkthrough is current again: Ubuntu 26.04 nodes, Kubernetes 1.36 from `pkgs.k8s.io`, and a new section on upgrading the cluster to 1.37. Every step was run end to end on fresh nodes, and the sample output comes from those runs.
