@@ -19,16 +19,13 @@ Build a `kubeadm` practice cluster for the CKA and CKAD exams on your own KVM ho
 
 I've been studying for the Cloud Native Computing Foundation's CKA and CKAD certification exams for a while now.  Anyone who is familiar with these exams knows that, in order to practice, you're going to need a cluster.  Hands-on experience with Kubernetes clusters, of the `kubeadm` variety, is key to passing these exams.
 
-For the past year and a half, I've had access to an AWS environment, with a GitLab repository, flashy CI/CD and Terraform/Packer to deliver one or more pre-provisioned Kubernetes environments for me to teach Kubernetes to students, or to practice Kubernetes solo.
+For the past year and a half, I've had access to an AWS environment, with flashy CI/CD and Terraform/Packer to deliver one or more pre-provisioned Kubernetes environments for me to teach Kubernetes to students, or to practice Kubernetes solo.
 
 Now that I'm out on my own, and that fancy AWS lab environment is a thing of the past, I've been imagining a replacement of my own.
 
 I had a few requirements:
 
-- Keep the code in GitLab for development and personal use
-  - Use CI/CD: Adding this after the initial release
-    - Working this out in my GitLab environment in my home lab
-  - Periodically push the updated code to GitHub to share with the world
+- Share the code on GitHub, with CI checks on every pull request
 - Use Terraform for automation
   - Flexibility in configuration of cluster via variables
 - Leverage KVM/libvirt
@@ -60,7 +57,7 @@ During my research for this project, I stumbled across the [Terraform Module for
 
 ***Sounds good to me!***
 
-So, by using one invocation of the module for Control Plane hosts, and one for Worker nodes, we can build a flexible cluster configuration that we can configure for clusters of varying sizes and node counts.
+So, by calling the module once for Control Plane hosts and once for Worker nodes, we can build clusters of different sizes from a single configuration.
 
 ***So, how will we implement this?***
 
@@ -475,7 +472,7 @@ The Ubuntu cloud image has no swap, which `kubeadm` requires, so there's nothing
 
 ### Install the `containerd` Runtime
 
-When deploying a Kubernetes cluster, you have choices with regard to your container runtime.  We'll use `containerd`, which Ubuntu 26.04 packages itself.  If you'd rather use CRI-O, skip this section and follow [OPTIONAL: Use the CRI-O Runtime Instead](#optional-use-the-cri-o-runtime-instead), then come back to [Install the `kubeadm` Packages](#install-the-kubeadm-packages).
+Kubernetes gives you a choice of container runtime.  We'll use `containerd`, which Ubuntu 26.04 packages itself.  If you'd rather use CRI-O, skip this section and follow [OPTIONAL: Use the CRI-O Runtime Instead](#optional-use-the-cri-o-runtime-instead), then come back to [Install the `kubeadm` Packages](#install-the-kubeadm-packages).
 
 ***Perform the following steps on all nodes.***
 
@@ -1109,7 +1106,7 @@ worker-node-02     Ready    <none>          10m   v1.37.2   ...   cri-o://1.37.2
 
 ## OPTIONAL: Configure `kubectl` on Your Virtualization Host
 
-You might want to manage your cluster using `kubectl` on your virtualization host.  This is a common use case scenario that is easy to implement.
+You might want to manage your cluster with `kubectl` on your virtualization host.  All it takes is a copy of the cluster's `kubeconfig`.
 
 If you don't have `kubectl` installed on your virtualization host, install it now.
 
@@ -1176,7 +1173,7 @@ Run `terraform apply` again any time you want a fresh set of nodes to practice o
 
 ## Summary
 
-By leveraging the [Terraform Module for KVM/Libvirt Virtual Machines](https://registry.terraform.io/modules/MonolithProjects/vm/libvirt/latest), we can build a set of nodes on a KVM hypervisor, in a quick and repeatable way, which is perfect for getting hands-on with Kubernetes clusters.  Using the materials in this repository, you can customize the Terraform for your needs and use cases, build a cluster with `kubeadm`, and practice upgrading it.
+The [Terraform Module for KVM/Libvirt Virtual Machines](https://registry.terraform.io/modules/MonolithProjects/vm/libvirt/latest) builds a set of nodes on a KVM hypervisor quickly and repeatably, which makes it a good fit for hands-on Kubernetes practice.  Using the materials in this repository, you can customize the Terraform for your needs and use cases, build a cluster with `kubeadm`, and practice upgrading it.
 
 *Enjoy!*
 
