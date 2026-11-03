@@ -19,9 +19,7 @@ Build a `kubeadm` practice cluster for the CKA and CKAD exams on your own KVM ho
 
 I've been studying for the Cloud Native Computing Foundation's CKA and CKAD certification exams for a while now.  Anyone who is familiar with these exams knows that, in order to practice, you're going to need a cluster.  Hands-on experience with Kubernetes clusters, of the `kubeadm` variety, is key to passing these exams.
 
-For the past year and a half, I've had access to an AWS environment, with flashy CI/CD and Terraform/Packer to deliver one or more pre-provisioned Kubernetes environments for me to teach Kubernetes to students, or to practice Kubernetes solo.
-
-Now that I'm out on my own, and that fancy AWS lab environment is a thing of the past, I've been imagining a replacement of my own.
+I wanted a cluster I could build, break, and rebuild on my own hardware as often as I liked, without paying for cloud time.
 
 I had a few requirements:
 
@@ -33,10 +31,7 @@ I had a few requirements:
   - Avoid Cloud expenses
 - Keep the project simple and straightforward
   - Iterate as needed
-- Build something I can use with the CNCF CKA/D courses
-  - Test and evaluate cluster build process/scripts
-    - LFS258 (CKA)
-    - LFD259 (CKAD)
+- Practice the cluster-building parts of the CKA and CKAD, and of the LFS258 and LFD259 courses
 
 ***So, how do we get from here to there?***
 
