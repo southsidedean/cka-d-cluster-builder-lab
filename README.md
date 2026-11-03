@@ -69,7 +69,7 @@ You can change all kinds of things in the variables at the top of `cka-builder.t
 | `control_plane_nodes`, `worker_nodes` | `1`, `2` | How many nodes of each kind: an odd number of control plane nodes, and 0 or more workers |
 | `cp_prefix`, `worker_prefix` | `control-plane-`, `worker-node-` | Hostname prefixes; nodes are numbered from `01` |
 | `cp_cpu`, `worker_cpu` | `2` | vCPUs per node |
-| `cp_memory`, `worker_memory` | `8192` | Memory per node, in MB |
+| `cp_memory`, `worker_memory` | `4096` | Memory per node, in MB |
 | `cp_disk`, `worker_disk` | `25` | Disk per node, in GB |
 | `cp_diskpool`, `worker_diskpool` | `default` | The libvirt storage pool for the node disks |
 | `privateuser`, `privatekey`, `pubkey` | `ubuntu`, `~/.ssh/id_ed25519`, `~/.ssh/id_ed25519.pub` | The login user and the SSH key Terraform puts on every node |
@@ -81,7 +81,7 @@ If your host doesn't have room for the defaults, the [`examples`](examples) fold
 
 | File | Control plane | Workers | Memory per node | Host total |
 | --- | --- | --- | --- | --- |
-| (none, the defaults) | 1 | 2 | 8 GB | 6 vCPUs, 24 GB |
+| (none, the defaults) | 1 | 2 | 4 GB | 6 vCPUs, 12 GB |
 | `examples/single-node.tfvars` | 1 | 0 | 4 GB | 2 vCPUs, 4 GB |
 | `examples/lean.tfvars` | 1 | 1 | 3 GB | 4 vCPUs, 6 GB |
 | `examples/ha-lean.tfvars` | 3 | 1 | 3 GB | 8 vCPUs, 12 GB |
@@ -96,7 +96,7 @@ Below the variables, the `libvirt` provider is pinned to 0.8.x (0.9 is a rewrite
 ### What You Need
 
 - A Linux host with KVM: Ubuntu 24.04, or RHEL, Rocky Linux, or AlmaLinux 9 or 10. Check that the CPU's virtualization extensions are on with `grep -cE 'vmx|svm' /proc/cpuinfo` (anything above `0` is fine).
-- Enough room for the nodes. The defaults (one control plane and two workers, each with 2 vCPUs and 8 GB of memory) need 6 vCPUs and 24 GB of memory free, and the disks used about 13 GB once the cluster was built. For a smaller host, pick one of the sizes in [`examples`](examples) (see the table above).
+- Enough room for the nodes. The defaults (one control plane and two workers, each with 2 vCPUs and 4 GB of memory) need 6 vCPUs and 12 GB of memory free, and the disks used about 13 GB once the cluster was built. For a smaller host, pick one of the sizes in [`examples`](examples) (see the table above).
 - Internet access from the nodes, for packages and container images.
 - An SSH key pair at `~/.ssh/id_ed25519`, or change `privatekey` and `pubkey`.
 

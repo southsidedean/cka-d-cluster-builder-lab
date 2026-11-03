@@ -69,7 +69,7 @@ variable "cp_disk" {
 
 variable "cp_memory" {
   type    = number
-  default = 8192
+  default = 4096
 
   validation {
     condition     = var.cp_memory >= 2048
@@ -96,7 +96,7 @@ variable "worker_disk" {
 
 variable "worker_memory" {
   type    = number
-  default = 8192
+  default = 4096
 
   validation {
     condition     = var.worker_memory >= 2048
