@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0 (unreleased)
+
+### Changes
+
+- The README's introduction says why the lab exists, without the old AWS backstory, and its requirements now name the cluster-building parts of the CKA and CKAD and the LFS258 and LFD259 courses.
+
 ## 0.3.1 (2026-11-03)
 
 Documentation only: no Terraform or command changes.
