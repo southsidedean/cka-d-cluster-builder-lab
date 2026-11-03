@@ -11,7 +11,7 @@
 
 Build a `kubeadm` practice cluster for the CKA and CKAD exams on your own KVM host: Terraform creates the nodes, and this walkthrough takes you from bare VMs to a working cluster, then through an upgrade.
 
-> **Tested in 0.3.0** on an Ubuntu 24.04 host with Terraform 1.17.1, libvirt provider 0.8.3, and the VM module 1.12.0: Ubuntu 26.04 nodes, Kubernetes 1.36.6 upgraded to 1.37.2, `containerd` 2.2.2 (or CRI-O 1.36.7 to 1.37.2), and Calico 3.33.0. The Terraform part was also tested on Rocky Linux 9.8 and 10.2 hosts in 0.2.1. [CHANGELOG.md](CHANGELOG.md) has what changed in each release.
+> **Tested in 0.3.0** on an Ubuntu 24.04 host with Terraform 1.17.1, libvirt provider 0.8.3, and the VM module 1.12.0: Ubuntu 26.04 nodes, Kubernetes 1.36.6 upgraded to 1.37.2, `containerd` 2.2.2 (or CRI-O 1.36.7 to 1.37.2), and Calico 3.33.0. The Terraform part was also tested on Rocky Linux 9.8 and 10.2 hosts. [CHANGELOG.md](CHANGELOG.md) has what changed in each release.
 
 ## Introduction
 
@@ -1006,6 +1006,8 @@ pod/coredns-559f6c778d-m5jh9 evicted
 node/worker-node-01 drained
 ```
 
+If `calico-kube-controllers` is running on the node, the drain may print `Cannot evict pod as it would violate the pod's disruption budget` a few times.  It retries every five seconds and finishes once Calico has the pod running somewhere else, which took about 45 seconds in testing.
+
 ***On the worker node, as `root`:*** upgrade the kubelet and `kubectl`, and restart the kubelet.
 
 ```bash
@@ -1084,6 +1086,8 @@ CRI-O uses the `systemd` cgroup driver out of the box, so there's nothing to con
 curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.37/deb/Release.key | gpg --dearmor --yes -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
 sed -i 's/v1.36/v1.37/' /etc/apt/sources.list.d/cri-o.list
 ```
+
+On the Control Plane node, `kubeadm upgrade plan` warns that CRI-O's sandbox image, `registry.k8s.io/pause:3.10.1`, isn't the `pause:3.10.2` that `kubeadm` 1.37 recommends.  The warning is harmless, and upgrading CRI-O to 1.37 takes care of it.
 
 Then, after draining the node, upgrade and restart CRI-O together with the kubelet:
 
