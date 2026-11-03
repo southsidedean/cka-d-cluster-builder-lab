@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.1 (unreleased)
+## 0.3.1 (2026-11-03)
 
 Documentation only: no Terraform or command changes.
 
