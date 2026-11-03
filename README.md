@@ -62,14 +62,14 @@ So, by calling the module once for Control Plane hosts and once for Worker nodes
 
 I like to K.I.S.S. (Keep It Simple, Stupid!) whenever possible, and this was a case where I could put everything into a single file.  Yeah, yeah, yeah, why all the variables when we could just set them down in the module?  Because, I like to separate the input from the machinery.
 
-You can change all kinds of things in the variables at the top of `cka-builder.tf`:
+You can change all kinds of things in the variables at the top of `cka-builder.tf`.  Terraform checks the sizes before it builds anything: an odd number of control plane nodes (etcd needs a majority of them), and at least 2 vCPUs and 2048 MB of memory per node, which is what `kubeadm` needs.
 
 | Variable | Default | What it sets |
 | --- | --- | --- |
-| `control_plane_nodes`, `worker_nodes` | `1`, `2` | How many nodes of each kind (at least one of each) |
+| `control_plane_nodes`, `worker_nodes` | `1`, `2` | How many nodes of each kind: an odd number of control plane nodes, and 0 or more workers |
 | `cp_prefix`, `worker_prefix` | `control-plane-`, `worker-node-` | Hostname prefixes; nodes are numbered from `01` |
 | `cp_cpu`, `worker_cpu` | `2` | vCPUs per node |
-| `cp_memory`, `worker_memory` | `8192` | Memory per node, in MB |
+| `cp_memory`, `worker_memory` | `4096` | Memory per node, in MB |
 | `cp_disk`, `worker_disk` | `25` | Disk per node, in GB |
 | `cp_diskpool`, `worker_diskpool` | `default` | The libvirt storage pool for the node disks |
 | `privateuser`, `privatekey`, `pubkey` | `ubuntu`, `~/.ssh/id_ed25519`, `~/.ssh/id_ed25519.pub` | The login user and the SSH key Terraform puts on every node |
@@ -77,12 +77,26 @@ You can change all kinds of things in the variables at the top of `cka-builder.t
 | `osimg` | Ubuntu 26.04 cloud image | The image every node starts from |
 | `graphics` | `vnc` | The VM console type. RHEL 9 and later dropped SPICE, and VNC works everywhere |
 
+If your host doesn't have room for the defaults, the [`examples`](examples) folder has smaller sizes.  Pass one to Terraform with `-var-file`, for example `terraform apply -var-file=examples/lean.tfvars`, and use the same file for `terraform plan` and `terraform destroy`:
+
+| File | Control plane | Workers | Memory per node | Host total |
+| --- | --- | --- | --- | --- |
+| (none, the defaults) | 1 | 2 | 4 GB | 6 vCPUs, 12 GB |
+| `examples/single-node.tfvars` | 1 | 0 | 4 GB | 2 vCPUs, 4 GB |
+| `examples/lean.tfvars` | 1 | 1 | 3 GB | 4 vCPUs, 6 GB |
+| `examples/ha-lean.tfvars` | 3 | 1 | 3 GB | 8 vCPUs, 12 GB |
+| `examples/ha.tfvars` | 3 | 2 | 4 GB | 10 vCPUs, 20 GB |
+
+With the cluster built and the test workload running, the control plane node used 1.1 to 1.2 GB of memory and each worker 600 to 700 MB, whatever the size.  The rest is room for your practice workloads.
+
+With no workers, the cluster's only node is the control plane node, and `kubeadm` taints it so ordinary pods won't run there.  Remove the taint right after `kubeadm init` with `kubectl taint nodes --all node-role.kubernetes.io/control-plane-`, and skip the steps that join the workers.
+
 Below the variables, the `libvirt` provider is pinned to 0.8.x (0.9 is a rewrite the VM module doesn't support), and the module is called twice: once for the control plane nodes and once for the workers.
 
 ### What You Need
 
 - A Linux host with KVM: Ubuntu 24.04, or RHEL, Rocky Linux, or AlmaLinux 9 or 10. Check that the CPU's virtualization extensions are on with `grep -cE 'vmx|svm' /proc/cpuinfo` (anything above `0` is fine).
-- Enough room for the nodes. The defaults (one control plane and two workers, each with 2 vCPUs and 8 GB of memory) need 6 vCPUs and 24 GB of memory free, and the disks used about 13 GB once the cluster was built. You can make the nodes smaller in the variables, but `kubeadm` wants at least 2 vCPUs and 2 GB of memory per node.
+- Enough room for the nodes. The defaults (one control plane and two workers, each with 2 vCPUs and 4 GB of memory) need 6 vCPUs and 12 GB of memory free, and the disks used about 13 GB once the cluster was built. For a smaller host, pick one of the sizes in [`examples`](examples) (see the table above).
 - Internet access from the nodes, for packages and container images.
 - An SSH key pair at `~/.ssh/id_ed25519`, or change `privatekey` and `pubkey`.
 

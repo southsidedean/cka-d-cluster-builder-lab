@@ -2,7 +2,14 @@
 
 ## 0.4.0 (unreleased)
 
+### New
+
+- Smaller lab sizes in `examples/`, for smaller hosts: a single node, a lean one control plane and one worker, and two HA layouts with three control plane nodes. Use one with `terraform apply -var-file=examples/lean.tfvars`.
+- Terraform checks the node counts and sizes before it builds anything: an odd number of control plane nodes, 0 or more workers, and at least 2 vCPUs and 2048 MB per node.
+
 ### Changes
+
+- Nodes get 4 GB of memory by default instead of 8 GB, so the default lab needs 12 GB instead of 24 GB. With the cluster and test workload running, a node used 1.3 GB at most. To keep 8 GB, set `cp_memory` and `worker_memory` to `8192`.
 
 - The README's introduction says why the lab exists, without the old AWS backstory, and its requirements now name the cluster-building parts of the CKA and CKAD and the LFS258 and LFD259 courses.
 
