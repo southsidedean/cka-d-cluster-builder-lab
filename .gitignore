@@ -3,4 +3,6 @@
 *.tfstate
 *.tfstate.*
 *.tfvars
+# The example sizes are part of the lab
+!examples/*.tfvars
 crash.log

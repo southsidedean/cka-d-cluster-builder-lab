@@ -11,17 +11,29 @@
 
 # Let's set some variables!
 
-# Cluster sizing: minimum one of each!
+# Cluster sizing
 # We can set the number of control plane and worker nodes here
+# One control plane node is the minimum, and 0 workers makes a single-node cluster
+# The examples folder has ready-made sizes: terraform apply -var-file=examples/lean.tfvars
 
 variable "control_plane_nodes" {
   type    = number
   default = 1
+
+  validation {
+    condition     = var.control_plane_nodes >= 1 && var.control_plane_nodes % 2 == 1
+    error_message = "control_plane_nodes must be an odd number, 1 or more, because etcd needs a majority of the control plane nodes to keep working."
+  }
 }
 
 variable "worker_nodes" {
   type    = number
   default = 2
+
+  validation {
+    condition     = var.worker_nodes >= 0 && floor(var.worker_nodes) == var.worker_nodes
+    error_message = "worker_nodes must be a whole number, 0 or more."
+  }
 }
 
 # Hostname prefixes
@@ -43,6 +55,11 @@ variable "worker_prefix" {
 variable "cp_cpu" {
   type    = number
   default = 2
+
+  validation {
+    condition     = var.cp_cpu >= 2 && floor(var.cp_cpu) == var.cp_cpu
+    error_message = "cp_cpu must be a whole number, 2 or more, because kubeadm needs at least 2 vCPUs per node."
+  }
 }
 
 variable "cp_disk" {
@@ -53,6 +70,11 @@ variable "cp_disk" {
 variable "cp_memory" {
   type    = number
   default = 8192
+
+  validation {
+    condition     = var.cp_memory >= 2048
+    error_message = "cp_memory must be 2048 (MB) or more, because kubeadm needs at least 2 GB per node."
+  }
 }
 
 # On to the worker nodes
@@ -60,6 +82,11 @@ variable "cp_memory" {
 variable "worker_cpu" {
   type    = number
   default = 2
+
+  validation {
+    condition     = var.worker_cpu >= 2 && floor(var.worker_cpu) == var.worker_cpu
+    error_message = "worker_cpu must be a whole number, 2 or more, because kubeadm needs at least 2 vCPUs per node."
+  }
 }
 
 variable "worker_disk" {
@@ -70,6 +97,11 @@ variable "worker_disk" {
 variable "worker_memory" {
   type    = number
   default = 8192
+
+  validation {
+    condition     = var.worker_memory >= 2048
+    error_message = "worker_memory must be 2048 (MB) or more, because kubeadm needs at least 2 GB per node."
+  }
 }
 
 # Disk Pool to use
