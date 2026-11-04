@@ -79,15 +79,17 @@ You can change all kinds of things in the variables at the top of `cka-builder.t
 
 If your host doesn't have room for the defaults, the [`examples`](examples) folder has smaller sizes.  Pass one to Terraform with `-var-file`, for example `terraform apply -var-file=examples/lean.tfvars`, and use the same file for `terraform plan` and `terraform destroy`:
 
-| File | Control plane | Workers | Memory per node | Host total |
+| File | Control plane | Workers | Memory per node (control plane, worker) | Host total |
 | --- | --- | --- | --- | --- |
-| (none, the defaults) | 1 | 2 | 4 GB | 6 vCPUs, 12 GB |
+| (none, the defaults) | 1 | 2 | 4 GB, 4 GB | 6 vCPUs, 12 GB |
 | `examples/single-node.tfvars` | 1 | 0 | 4 GB | 2 vCPUs, 4 GB |
-| `examples/lean.tfvars` | 1 | 1 | 3 GB | 4 vCPUs, 6 GB |
-| `examples/ha-lean.tfvars` | 3 | 1 | 3 GB | 8 vCPUs, 12 GB |
-| `examples/ha.tfvars` | 3 | 2 | 4 GB | 10 vCPUs, 20 GB |
+| `examples/lean.tfvars` | 1 | 1 | 4 GB, 3 GB | 4 vCPUs, 7 GB |
+| `examples/ha-lean.tfvars` | 3 | 1 | 4 GB, 3 GB | 8 vCPUs, 15 GB |
+| `examples/ha.tfvars` | 3 | 2 | 4 GB, 4 GB | 10 vCPUs, 20 GB |
 
-With the cluster built, the test workload running, and metrics-server installed, the control plane node used 1.4 to 1.6 GB of memory and each worker 700 MB to 1 GB.  The rest is room for your practice workloads.
+With the cluster built, the test workload running, and metrics-server installed, the control plane node used 1.4 to 1.6 GB of memory and each worker 700 MB to 1 GB.  The rest is room for your practice workloads.  The control plane node uses more because it also runs etcd, the API server, the scheduler, and the controller manager.
+
+If your host is tight on memory, the control plane node can run on 3 GB: add `-var cp_memory=3072` after the `-var-file` option, and add it to `plan` and `destroy` as well.  It works, but in testing a 3 GB control plane node had only 1.4 GB free with everything above running, and a few practice Deployments can use that up.  Workers are fine at 3 GB, with about 2.3 GB free.
 
 With no workers, the cluster's only node is the control plane node, and `kubeadm` taints it so ordinary pods won't run there.  Remove the taint right after `kubeadm init` with `kubectl taint nodes --all node-role.kubernetes.io/control-plane-`, and skip the steps that join the workers.
 

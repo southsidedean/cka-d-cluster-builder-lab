@@ -4,7 +4,7 @@
 
 ### New
 
-- Smaller lab sizes in `examples/`, for smaller hosts: a single node, a lean one control plane and one worker, and two HA layouts with three control plane nodes. Use one with `terraform apply -var-file=examples/lean.tfvars`.
+- Smaller lab sizes in `examples/`, for smaller hosts: a single node, a lean one control plane and one worker, and two HA layouts with three control plane nodes. The lean sizes give workers 3 GB and the control plane 4 GB; the README says how to run the control plane on 3 GB and what that leaves free. Use one with `terraform apply -var-file=examples/lean.tfvars`.
 - Terraform checks the node counts and sizes before it builds anything: an odd number of control plane nodes, 0 or more workers, and at least 2 vCPUs and 2048 MB per node.
 - [docs/helm-kustomize.md](docs/helm-kustomize.md) installs metrics-server on the cluster with Helm, then with Kustomize, and uses it for `kubectl top`. The CKA covers both tools.
 - The weekly upstream check also watches the CNCF's CKA and CKAD curricula, and posts a notice when one comes out for a newer Kubernetes than the README ends on.
@@ -12,7 +12,7 @@
 ### Changes
 
 - Calico is installed with the Tigera operator, which Calico recommends, instead of the `calico.yaml` manifest, which its docs now call legacy. The README sets the pod network in the operator's `Installation` resource, and Calico's pods run in the `calico-system` namespace. The upgrade section's notes and sample output are updated to match.
-- Nodes get 4 GB of memory by default instead of 8 GB, so the default lab needs 12 GB instead of 24 GB. With the cluster, the test workload, and metrics-server running, a node used about 1.4 GB at most. To keep 8 GB, set `cp_memory` and `worker_memory` to `8192`.
+- Nodes get 4 GB of memory by default instead of 8 GB, so the default lab needs 12 GB instead of 24 GB. With the cluster, the test workload, and metrics-server running, the control plane node used about 1.4 GB and each worker 1 GB at most. To keep 8 GB, set `cp_memory` and `worker_memory` to `8192`.
 - The README's introduction says why the lab exists, without the old AWS backstory, and its requirements now name the cluster-building parts of the CKA and CKAD and the LFS258 and LFD259 courses.
 
 ## 0.3.1 (2026-11-03)
