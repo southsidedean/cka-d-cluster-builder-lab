@@ -609,6 +609,8 @@ Now, we're going to use `kubeadm` to configure and deploy Kubernetes on the node
 
 `--pod-network-cidr` gives the pods their own address range, `10.244.0.0/16`, away from the nodes' `192.168.122.0/24`.  We'll give Calico the same range when we install it.
 
+To practice with a `kubeadm` config file instead of flags, follow [docs/kubeadm-config.md](docs/kubeadm-config.md) for this step, then come back for the next one.
+
 **Initialize the Control Plane node:**
 
 ```bash
