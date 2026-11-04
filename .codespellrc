@@ -1,4 +1,5 @@
 [codespell]
 skip = .git,.backups,.terraform,*.lock.hcl
-# Quoted as written from the VM module's registry page.
-ignore-words-list = complient
+# complient: quoted as written from the VM module's registry page.
+# fpr: gpg's fingerprint field, in the Helm install steps from helm.sh.
+ignore-words-list = complient,fpr

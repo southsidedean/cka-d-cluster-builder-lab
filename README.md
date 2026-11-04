@@ -79,15 +79,17 @@ You can change all kinds of things in the variables at the top of `cka-builder.t
 
 If your host doesn't have room for the defaults, the [`examples`](examples) folder has smaller sizes.  Pass one to Terraform with `-var-file`, for example `terraform apply -var-file=examples/lean.tfvars`, and use the same file for `terraform plan` and `terraform destroy`:
 
-| File | Control plane | Workers | Memory per node | Host total |
+| File | Control plane | Workers | Memory per node (control plane, worker) | Host total |
 | --- | --- | --- | --- | --- |
-| (none, the defaults) | 1 | 2 | 4 GB | 6 vCPUs, 12 GB |
+| (none, the defaults) | 1 | 2 | 4 GB, 4 GB | 6 vCPUs, 12 GB |
 | `examples/single-node.tfvars` | 1 | 0 | 4 GB | 2 vCPUs, 4 GB |
-| `examples/lean.tfvars` | 1 | 1 | 3 GB | 4 vCPUs, 6 GB |
-| `examples/ha-lean.tfvars` | 3 | 1 | 3 GB | 8 vCPUs, 12 GB |
-| `examples/ha.tfvars` | 3 | 2 | 4 GB | 10 vCPUs, 20 GB |
+| `examples/lean.tfvars` | 1 | 1 | 4 GB, 3 GB | 4 vCPUs, 7 GB |
+| `examples/ha-lean.tfvars` | 3 | 1 | 4 GB, 3 GB | 8 vCPUs, 15 GB |
+| `examples/ha.tfvars` | 3 | 2 | 4 GB, 4 GB | 10 vCPUs, 20 GB |
 
-With the cluster built and the test workload running, the control plane node used 1.1 to 1.2 GB of memory and each worker 600 to 700 MB, whatever the size.  The rest is room for your practice workloads.
+With the cluster built, the test workload running, and metrics-server installed, the control plane node used 1.4 to 1.6 GB of memory and each worker 700 MB to 1 GB.  The rest is room for your practice workloads.  The control plane node uses more because it also runs etcd, the API server, the scheduler, and the controller manager.
+
+If your host is tight on memory, the control plane node can run on 3 GB: add `-var cp_memory=3072` after the `-var-file` option, and add it to `plan` and `destroy` as well.  It works, but in testing a 3 GB control plane node had only 1.4 GB free with everything above running, and a few practice Deployments can use that up.  Workers are fine at 3 GB, with about 2.3 GB free.
 
 With no workers, the cluster's only node is the control plane node, and `kubeadm` taints it so ordinary pods won't run there.  Remove the taint right after `kubeadm init` with `kubectl taint nodes --all node-role.kubernetes.io/control-plane-`, and skip the steps that join the workers.
 
@@ -605,7 +607,7 @@ Now, we're going to use `kubeadm` to configure and deploy Kubernetes on the node
 
 ***Perform the following steps on the Control Plane node, still as `root`.***
 
-`--pod-network-cidr` gives the pods their own address range, `10.244.0.0/16`, away from the nodes' `192.168.122.0/24`.  Calico picks it up from `kubeadm` automatically.
+`--pod-network-cidr` gives the pods their own address range, `10.244.0.0/16`, away from the nodes' `192.168.122.0/24`.  We'll give Calico the same range when we install it.
 
 **Initialize the Control Plane node:**
 
@@ -684,27 +686,70 @@ control-plane-01   NotReady   control-plane   17s   v1.36.6
 
 ***Perform the following steps on the Control Plane node.***
 
-**Download and deploy the Calico CNI manifest:**
+Calico recommends installing it with the Tigera operator.  The operator is a controller that runs in the cluster: you describe the Calico you want in an `Installation` resource, and the operator deploys it and keeps it that way.  The resource types it uses come from custom resource definitions (CRDs), which we install first.
+
+**Install Calico's CRDs and the Tigera operator:**
 
 ```bash
-curl -sSO https://raw.githubusercontent.com/projectcalico/calico/v3.33.0/manifests/calico.yaml
-kubectl apply -f calico.yaml
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.33.0/manifests/v3_projectcalico_org.yaml
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.33.0/manifests/tigera-operator.yaml
 ```
 
-If we wanted to customize our Calico deployment, we could edit the `calico.yaml` manifest.  We're going to use it as-is.
+The CRD file is too big for `kubectl apply`, which keeps a copy of each object in an annotation, so use `kubectl create`.
 
 **SAMPLE OUTPUT EXCERPT:**
 
 ```bash
-poddisruptionbudget.policy/calico-kube-controllers created
-serviceaccount/calico-kube-controllers created
-serviceaccount/calico-node created
-serviceaccount/calico-cni-plugin created
-configmap/calico-config created
-customresourcedefinition.apiextensions.k8s.io/bgpconfigurations.crd.projectcalico.org created
 ...
-daemonset.apps/calico-node created
-deployment.apps/calico-kube-controllers created
+customresourcedefinition.apiextensions.k8s.io/stagednetworkpolicies.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/tiers.projectcalico.org created
+namespace/tigera-operator created
+serviceaccount/tigera-operator created
+...
+deployment.apps/tigera-operator created
+```
+
+Calico's sample `Installation` gives the pods `192.168.0.0/16`, which overlaps the nodes' `192.168.122.0/24`.  Change it to the range we gave `kubeadm init`.
+
+**Download the custom resources, set the pod network, and create them:**
+
+```bash
+curl -sSO https://raw.githubusercontent.com/projectcalico/calico/v3.33.0/manifests/custom-resources.yaml
+sed -i 's#cidr: 192.168.0.0/16#cidr: 10.244.0.0/16#' custom-resources.yaml
+grep cidr custom-resources.yaml
+kubectl create -f custom-resources.yaml
+```
+
+**SAMPLE OUTPUT:**
+
+```bash
+        cidr: 10.244.0.0/16
+installation.operator.tigera.io/default created
+apiserver.operator.tigera.io/default created
+goldmane.operator.tigera.io/default created
+whisker.operator.tigera.io/default created
+```
+
+Besides the `Installation`, the file turns on Calico's API server, and Goldmane and Whisker, which collect and show network flows.
+
+**Watch the operator bring Calico up:**
+
+```bash
+watch kubectl get tigerastatus
+```
+
+It takes a minute or two.  When every line says `True` under `AVAILABLE`, press `Ctrl-C`.
+
+**SAMPLE OUTPUT:**
+
+```bash
+NAME        AVAILABLE   PROGRESSING   DEGRADED   SINCE   MESSAGE
+apiserver   True        False         False      1s      All objects available
+calico      True        False         False      6s      All objects available
+goldmane    True        False         False      1s      All objects available
+ippools     True        False         False      56s     All objects available
+tiers       True        False         False      51s     All objects available
+whisker     True        False         False      16s     All objects available
 ```
 
 **Wait for the Control Plane node to become `Ready`:**
@@ -719,7 +764,7 @@ kubectl get nodes
 ```bash
 node/control-plane-01 condition met
 NAME               STATUS   ROLES           AGE   VERSION
-control-plane-01   Ready    control-plane   42s   v1.36.6
+control-plane-01   Ready    control-plane   85s   v1.36.6
 ```
 
 ***Ok, we have a functional Control Plane!***
@@ -773,9 +818,9 @@ kubectl get nodes -o wide
 
 ```bash
 NAME               STATUS   ROLES           AGE    VERSION   INTERNAL-IP       EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION             CONTAINER-RUNTIME
-control-plane-01   Ready    control-plane   118s   v1.36.6   192.168.122.171   <none>        Ubuntu 26.04.1 LTS   7.0.0-38-generic (amd64)   containerd://2.2.2
-worker-node-01     Ready    <none>          66s    v1.36.6   192.168.122.228   <none>        Ubuntu 26.04.1 LTS   7.0.0-38-generic (amd64)   containerd://2.2.2
-worker-node-02     Ready    <none>          60s    v1.36.6   192.168.122.22    <none>        Ubuntu 26.04.1 LTS   7.0.0-38-generic (amd64)   containerd://2.2.2
+control-plane-01   Ready    control-plane   2m26s   v1.36.6   192.168.122.161   <none>        Ubuntu 26.04.1 LTS   7.0.0-38-generic (amd64)   containerd://2.2.2
+worker-node-01     Ready    <none>          58s     v1.36.6   192.168.122.78    <none>        Ubuntu 26.04.1 LTS   7.0.0-38-generic (amd64)   containerd://2.2.2
+worker-node-02     Ready    <none>          55s     v1.36.6   192.168.122.163   <none>        Ubuntu 26.04.1 LTS   7.0.0-38-generic (amd64)   containerd://2.2.2
 ```
 
 **Taking a look at the pods in our cluster:**
@@ -787,23 +832,33 @@ kubectl get pods -A
 **SAMPLE OUTPUT:**
 
 ```bash
-NAMESPACE     NAME                                       READY   STATUS    RESTARTS   AGE
-kube-system   calico-kube-controllers-6ffffbccff-z58dm   1/1     Running   0          2m3s
-kube-system   calico-node-68tcz                          1/1     Running   0          92s
-kube-system   calico-node-mmsq8                          1/1     Running   0          2m3s
-kube-system   calico-node-xblhv                          1/1     Running   0          97s
-kube-system   coredns-589f44dc88-282rx                   1/1     Running   0          2m3s
-kube-system   coredns-589f44dc88-zcvs5                   1/1     Running   0          2m3s
-kube-system   etcd-control-plane-01                      1/1     Running   0          2m10s
-kube-system   kube-apiserver-control-plane-01            1/1     Running   0          2m10s
-kube-system   kube-controller-manager-control-plane-01   1/1     Running   0          2m10s
-kube-system   kube-proxy-2wvwh                           1/1     Running   0          2m3s
-kube-system   kube-proxy-8l8sc                           1/1     Running   0          97s
-kube-system   kube-proxy-znfqj                           1/1     Running   0          92s
-kube-system   kube-scheduler-control-plane-01            1/1     Running   0          2m10s
+NAMESPACE         NAME                                       READY   STATUS    RESTARTS   AGE
+calico-system     calico-kube-controllers-6b66bbbd7b-8qsd4   1/1     Running   0          2m14s
+calico-system     calico-node-jpkch                          1/1     Running   0          2m14s
+calico-system     calico-node-tcxch                          1/1     Running   0          69s
+calico-system     calico-node-w24rn                          1/1     Running   0          72s
+calico-system     calico-typha-6f6b4bbfc5-dmrv4              1/1     Running   0          61s
+calico-system     calico-typha-6f6b4bbfc5-lb27b              1/1     Running   0          2m15s
+calico-system     calico-webhooks-7d655bcb48-fsbmt           1/1     Running   0          2m8s
+calico-system     calico-webhooks-7d655bcb48-ksfdk           1/1     Running   0          2m8s
+calico-system     csi-node-driver-6ddxb                      2/2     Running   0          2m14s
+calico-system     csi-node-driver-k4g6f                      2/2     Running   0          72s
+calico-system     csi-node-driver-nr5nq                      2/2     Running   0          69s
+calico-system     goldmane-7c87b647d7-xtm68                  1/1     Running   0          2m16s
+calico-system     whisker-59cdddc586-phbcx                   2/2     Running   0          96s
+kube-system       coredns-589f44dc88-8s674                   1/1     Running   0          2m30s
+kube-system       coredns-589f44dc88-dz88r                   1/1     Running   0          2m30s
+kube-system       etcd-control-plane-01                      1/1     Running   0          2m39s
+kube-system       kube-apiserver-control-plane-01            1/1     Running   0          2m39s
+kube-system       kube-controller-manager-control-plane-01   1/1     Running   0          2m39s
+kube-system       kube-proxy-4858p                           1/1     Running   0          2m30s
+kube-system       kube-proxy-l4fts                           1/1     Running   0          69s
+kube-system       kube-proxy-twhd8                           1/1     Running   0          72s
+kube-system       kube-scheduler-control-plane-01            1/1     Running   0          2m39s
+tigera-operator   tigera-operator-686489b657-52gqn           1/1     Running   0          2m30s
 ```
 
-The `calico-node` pods on the workers can take a minute to finish starting.  `kubectl wait --for=condition=Ready pods --all -n kube-system` waits for all of them.
+The operator runs Calico in the `calico-system` namespace, and itself in `tigera-operator`.  The Calico pods on the workers can take a minute to finish starting.  `kubectl wait --for=condition=Ready pods --all -A` waits for all of them.
 
 ### Run a Test Workload
 
@@ -822,8 +877,8 @@ kubectl run curl --image=curlimages/curl --rm -i --restart=Never -- curl -s -o /
 ```bash
 deployment "nginx" successfully rolled out
 NAME                    READY   STATUS    RESTARTS   AGE   IP               NODE             NOMINATED NODE   READINESS GATES
-nginx-7f8fbb96d-fljjf   1/1     Running   0          9s    10.244.2.129     worker-node-02   <none>           <none>
-nginx-7f8fbb96d-kjjvk   1/1     Running   0          9s    10.244.126.193   worker-node-01   <none>           <none>
+nginx-7f8fbb96d-qmv24   1/1     Running   0          9s    10.244.2.130     worker-node-02   <none>           <none>
+nginx-7f8fbb96d-srgfr   1/1     Running   0          9s    10.244.126.194   worker-node-01   <none>           <none>
 ...
 200
 pod "curl" deleted from default namespace
@@ -943,11 +998,14 @@ systemctl restart kubelet
 
 ```bash
 node/control-plane-01 cordoned
-Warning: ignoring DaemonSet-managed Pods: kube-system/calico-node-g4hf6, kube-system/kube-proxy-g957r
-evicting pod kube-system/coredns-589f44dc88-c7hs4
-evicting pod kube-system/calico-kube-controllers-6ffffbccff-9mdt2
-evicting pod kube-system/coredns-589f44dc88-99mvr
+Warning: ignoring DaemonSet-managed Pods: calico-system/calico-node-jpkch, calico-system/csi-node-driver-6ddxb, kube-system/kube-proxy-4858p
+evicting pod tigera-operator/tigera-operator-686489b657-52gqn
+evicting pod calico-system/calico-webhooks-7d655bcb48-ksfdk
+evicting pod calico-system/calico-kube-controllers-6b66bbbd7b-8qsd4
+evicting pod calico-system/calico-typha-6f6b4bbfc5-lb27b
 ...
+pod/coredns-589f44dc88-dz88r evicted
+pod/calico-typha-6f6b4bbfc5-lb27b evicted
 node/control-plane-01 drained
 ```
 
@@ -965,9 +1023,9 @@ kubectl --kubeconfig /etc/kubernetes/admin.conf get nodes
 ```bash
 node/control-plane-01 uncordoned
 NAME               STATUS   ROLES           AGE     VERSION
-control-plane-01   Ready    control-plane   7m24s   v1.37.2
-worker-node-01     Ready    <none>          6m32s   v1.36.6
-worker-node-02     Ready    <none>          6m26s   v1.36.6
+control-plane-01   Ready    control-plane   7m35s   v1.37.2
+worker-node-01     Ready    <none>          6m7s    v1.36.6
+worker-node-02     Ready    <none>          6m4s    v1.36.6
 ```
 
 ### Upgrade the Worker Nodes
@@ -1007,15 +1065,18 @@ kubectl drain worker-node-01 --ignore-daemonsets
 
 ```bash
 node/worker-node-01 cordoned
-Warning: ignoring DaemonSet-managed Pods: kube-system/calico-node-bcnq5, kube-system/kube-proxy-n6ts9
-evicting pod kube-system/coredns-559f6c778d-m5jh9
-evicting pod default/nginx-7f8fbb96d-kjjvk
-pod/nginx-7f8fbb96d-kjjvk evicted
-pod/coredns-559f6c778d-m5jh9 evicted
+Warning: ignoring DaemonSet-managed Pods: calico-system/calico-node-w24rn, calico-system/csi-node-driver-k4g6f, kube-system/kube-proxy-r59hx
+evicting pod tigera-operator/tigera-operator-686489b657-l9gqr
+evicting pod calico-system/calico-typha-6f6b4bbfc5-dmrv4
+...
+evicting pod default/nginx-7f8fbb96d-srgfr
+evicting pod kube-system/coredns-559f6c778d-5whkn
+...
+pod/calico-typha-6f6b4bbfc5-dmrv4 evicted
 node/worker-node-01 drained
 ```
 
-If `calico-kube-controllers` is running on the node, the drain may print `Cannot evict pod as it would violate the pod's disruption budget` a few times.  It retries every five seconds and finishes once Calico has the pod running somewhere else, which took about 45 seconds in testing.
+Calico's operator gives `calico-typha` a disruption budget, so the drain may print `Cannot evict pod as it would violate the pod's disruption budget` a few times.  It retries every five seconds and finishes once Typha is running on another node, which took about 10 seconds in testing.
 
 ***On the worker node, as `root`:*** upgrade the kubelet and `kubectl`, and restart the kubelet.
 
@@ -1046,14 +1107,20 @@ kubectl run curl --image=curlimages/curl --rm -i --restart=Never -- curl -s -o /
 
 ```bash
 NAME               STATUS   ROLES           AGE     VERSION
-control-plane-01   Ready    control-plane   9m12s   v1.37.2
-worker-node-01     Ready    <none>          8m20s   v1.37.2
-worker-node-02     Ready    <none>          8m14s   v1.37.2
+control-plane-01   Ready    control-plane   9m10s   v1.37.2
+worker-node-01     Ready    <none>          7m42s   v1.37.2
+worker-node-02     Ready    <none>          7m39s   v1.37.2
 ...
 200
 ```
 
+Draining and restarting the nodes moves Calico's pods around, so for a few minutes after the last worker `kubectl get tigerastatus` may show `calico` as `False` under `AVAILABLE` and `True` under `PROGRESSING`.  Run it again until every line is `True` under `AVAILABLE`.
+
 ***Every node is on 1.37, and the test workload kept working through the upgrade.***
+
+## OPTIONAL: Install Cluster Components with Helm and Kustomize
+
+The CKA expects you to install cluster components with Helm and with Kustomize.  [docs/helm-kustomize.md](docs/helm-kustomize.md) installs metrics-server on this cluster both ways, then uses it for `kubectl top`.
 
 ## OPTIONAL: Use the CRI-O Runtime Instead
 

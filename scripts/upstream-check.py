@@ -6,7 +6,10 @@ Compares what the lab installs with what's current:
 - Kubernetes: the newest minor the README installs or upgrades to (from its
   pkgs.k8s.io repository lines). Fails once that minor is out of upstream
   support (older than the newest three); a newer minor alone is a notice.
-- Calico: the version in the README's manifest URL. A newer release is a notice.
+- Calico: the version in the README's manifest URLs, which must all match.
+  A newer release is a notice.
+- Curricula: the newest CKA and CKAD curriculum in cncf/curriculum. One for a
+  newer Kubernetes minor than the README ends on is a notice.
 - Ubuntu: the cloud image in cka-builder.tf. Fails if it isn't a supported LTS;
   a newer LTS is a notice.
 
@@ -68,13 +71,26 @@ headers = {"Accept": "application/vnd.github+json"}
 if os.environ.get("GH_TOKEN"):
     headers["Authorization"] = f"Bearer {os.environ['GH_TOKEN']}"
 calico = json.loads(fetch("https://api.github.com/repos/projectcalico/calico/releases/latest", headers))["tag_name"]
-m = re.search(r"projectcalico/calico/(v\d+\.\d+\.\d+)/", readme)
-if not m:
+found = sorted(set(re.findall(r"projectcalico/calico/(v\d+\.\d+\.\d+)/", readme)))
+if not found:
     fail("The README has no Calico manifest URL to check.")
-elif m.group(1) != calico:
-    notice(f"Calico {calico} is out; the README uses {m.group(1)}.")
+elif len(found) > 1:
+    fail(f"The README's Calico URLs use different versions: {', '.join(found)}.")
+elif found[0] != calico:
+    notice(f"Calico {calico} is out; the README uses {found[0]}.")
 else:
     print(f"Calico: the README uses {calico}, the newest.")
+
+# Curricula: the CNCF publishes one PDF per exam and Kubernetes minor
+files = [f["name"] for f in json.loads(fetch("https://api.github.com/repos/cncf/curriculum/contents/", headers))]
+for exam in ("CKA", "CKAD"):
+    versions = [int(v) for v in re.findall(rf"^{exam}_Curriculum_v1\.(\d+)\.pdf$", "\n".join(files), re.M)]
+    if not versions:
+        fail(f"cncf/curriculum has no {exam} curriculum PDF to check.")
+    elif used and max(versions) > max(used):
+        notice(f"The {exam} curriculum v1.{max(versions)} is out; the README ends on 1.{max(used)}.")
+    else:
+        print(f"{exam} curriculum: v1.{max(versions)}, the README ends on 1.{max(used) if used else '?'}.")
 
 # Ubuntu: supported LTS releases from Ubuntu's own release list
 supported, dist = [], None
