@@ -1124,6 +1124,10 @@ Draining and restarting the nodes moves Calico's pods around, so for a few minut
 
 The CKA expects you to install cluster components with Helm and with Kustomize.  [docs/helm-kustomize.md](docs/helm-kustomize.md) installs metrics-server on this cluster both ways, then uses it for `kubectl top`.
 
+## OPTIONAL: Reset and Rebuild the Cluster
+
+To practice `kubeadm` again without new VMs, [docs/practice-loop.md](docs/practice-loop.md) removes and re-joins a worker, resets the whole cluster with `kubeadm reset`, and rolls the nodes back to a libvirt snapshot taken before `kubeadm init`.
+
 ## OPTIONAL: Use the CRI-O Runtime Instead
 
 [GitHub: CRI-O packages](https://github.com/cri-o/packaging/blob/main/README.md)
