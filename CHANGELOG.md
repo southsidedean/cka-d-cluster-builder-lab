@@ -11,6 +11,7 @@
 - [docs/practice-loop.md](docs/practice-loop.md) has three ways to practice the cluster build again on the same VMs: remove and re-join a worker, reset the whole cluster with `kubeadm reset`, and revert the nodes to a libvirt snapshot taken before `kubeadm init`.
 - [docs/etcd-and-certs.md](docs/etcd-and-certs.md) backs up etcd with `etcdctl`, restores it with `etcdutl` after deleting the test workload, and renews the cluster's certificates with `kubeadm certs renew`. The restore uses the `--bump-revision` and `--mark-compacted` flags from etcd's recovery guide; without them, the restored cluster's services stopped answering in testing.
 - [docs/ha-control-plane.md](docs/ha-control-plane.md) builds a cluster with three control plane nodes on the HA sizes. keepalived and HAProxy run as static pods on the control plane nodes, following the kubeadm guide, and hold a virtual IP that the page keeps out of libvirt's DHCP range. It joins the other control plane nodes with `--control-plane --certificate-key`, shuts down the node holding the virtual IP to check that `kubectl` and the test workload keep working, and upgrades the HA cluster to 1.37.
+- The README's introduction has a table from each CKA v1.37 curriculum item the lab covers to the section or page that covers it, and says which parts of the CKA and CKAD it leaves for you to practice on the finished cluster.
 - The weekly upstream check also watches the CNCF's CKA and CKAD curricula, and posts a notice when one comes out for a newer Kubernetes than the README ends on.
 
 ### Changes
