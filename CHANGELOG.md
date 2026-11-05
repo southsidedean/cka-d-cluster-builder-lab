@@ -9,6 +9,7 @@
 - [docs/helm-kustomize.md](docs/helm-kustomize.md) installs metrics-server on the cluster with Helm, then with Kustomize, and uses it for `kubectl top`. The CKA covers both tools.
 - [docs/kubeadm-config.md](docs/kubeadm-config.md) runs `kubeadm init` from a config file instead of flags, with an `InitConfiguration`, a `ClusterConfiguration`, and a `KubeletConfiguration` that reserves memory for the OS. It also shows where `kubeadm` stores those settings in the cluster.
 - [docs/practice-loop.md](docs/practice-loop.md) has three ways to practice the cluster build again on the same VMs: remove and re-join a worker, reset the whole cluster with `kubeadm reset`, and revert the nodes to a libvirt snapshot taken before `kubeadm init`.
+- [docs/etcd-and-certs.md](docs/etcd-and-certs.md) backs up etcd with `etcdctl`, restores it with `etcdutl` after deleting the test workload, and renews the cluster's certificates with `kubeadm certs renew`. The restore uses the `--bump-revision` and `--mark-compacted` flags from etcd's recovery guide; without them, the restored cluster's services stopped answering in testing.
 - The weekly upstream check also watches the CNCF's CKA and CKAD curricula, and posts a notice when one comes out for a newer Kubernetes than the README ends on.
 
 ### Changes
