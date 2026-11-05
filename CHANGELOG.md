@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.4.0 (unreleased)
+## 0.4.0 (2026-11-05)
+
+The lab now covers the cluster-building half of the CKA: optional pages for a `kubeadm` config file, a practice loop, etcd backup and restore with certificate renewal, an HA control plane, and Helm and Kustomize, plus smaller sizes for smaller hosts. Every step was run end to end on hal9000, and the sample output comes from those runs.
+
+### Upgrading from 0.3.x
+
+The default node memory is now 4 GB instead of 8 GB, so `terraform plan` on nodes built with 0.3.x shows a change to them. To keep 8 GB, set `cp_memory` and `worker_memory` to `8192`. The README now installs Calico with the Tigera operator, so a cluster built with the old `calico.yaml` doesn't match the new sample output; build a fresh one to follow along.
 
 ### New
 
@@ -19,6 +25,12 @@
 - Calico is installed with the Tigera operator, which Calico recommends, instead of the `calico.yaml` manifest, which its docs now call legacy. The README sets the pod network in the operator's `Installation` resource, and Calico's pods run in the `calico-system` namespace. The upgrade section's notes and sample output are updated to match.
 - Nodes get 4 GB of memory by default instead of 8 GB, so the default lab needs 12 GB instead of 24 GB. With the cluster, the test workload, and metrics-server running, the control plane node used about 1.4 GB and each worker 1 GB at most. To keep 8 GB, set `cp_memory` and `worker_memory` to `8192`.
 - The README's introduction says why the lab exists, without the old AWS backstory, and its requirements now name the cluster-building parts of the CKA and CKAD and the LFS258 and LFD259 courses.
+
+### Testing
+
+- On an Ubuntu 24.04 host: the README with Calico's operator, the upgrade, and the Helm and Kustomize page on the default and lean sizes; the config file and practice loop pages on lean; etcd and certificates on the single node; and the HA control plane on HA lean. `examples/ha.tfvars` is HA lean with a second worker and wasn't run separately.
+- The CRI-O path ran end to end with the operator and with the config file, from CRI-O 1.36.8 to 1.37.3.
+- The Terraform part, with the new sizes and checks, was tested on Rocky Linux 9.8 and 10.2 hosts.
 
 ## 0.3.1 (2026-11-03)
 
