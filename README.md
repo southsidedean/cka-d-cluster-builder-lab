@@ -11,7 +11,7 @@
 
 Build a `kubeadm` practice cluster for the CKA and CKAD exams on your own KVM host: Terraform creates the nodes, and this walkthrough takes you from bare VMs to a working cluster, then through an upgrade.
 
-> **Tested in 0.3.0** on an Ubuntu 24.04 host with Terraform 1.17.1, libvirt provider 0.8.3, and the VM module 1.12.0: Ubuntu 26.04 nodes, Kubernetes 1.36.6 upgraded to 1.37.2, `containerd` 2.2.2 (or CRI-O 1.36.7 to 1.37.2), and Calico 3.33.0. The Terraform part was also tested on Rocky Linux 9.8 and 10.2 hosts. [CHANGELOG.md](CHANGELOG.md) has what changed in each release.
+> **Tested in 0.4.0** on an Ubuntu 24.04 host with Terraform 1.17.1, libvirt provider 0.8.3, and the VM module 1.12.0: Ubuntu 26.04 nodes, Kubernetes 1.36.6 upgraded to 1.37.2, `containerd` 2.2.2 (or CRI-O 1.36.8 to 1.37.3), and Calico 3.33.0 with its operator. Each optional page was tested on the size it names. The Terraform part was also tested on Rocky Linux 9.8 and 10.2 hosts. [CHANGELOG.md](CHANGELOG.md) has what changed in each release.
 
 ## Introduction
 
@@ -297,7 +297,7 @@ git clone https://github.com/southsidedean/cka-d-cluster-builder-lab.git
 cd cka-d-cluster-builder-lab
 ```
 
-To use a specific release instead of the latest code, check out its tag, for example `git checkout v0.3.0`.
+To use a specific release instead of the latest code, check out its tag, for example `git checkout v0.4.0`.
 
 [Terraform code](cka-builder.tf)
 
