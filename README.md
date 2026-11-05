@@ -104,6 +104,23 @@ Below the variables, the `libvirt` provider is pinned to 0.8.x (0.9 is a rewrite
 - Internet access from the nodes, for packages and container images.
 - An SSH key pair at `~/.ssh/id_ed25519`, or change `privatekey` and `pubkey`.
 
+### What It Covers
+
+The lab follows the [CKA curriculum v1.37](https://github.com/cncf/curriculum/blob/master/CKA_Curriculum_v1.37.pdf), the version for the Kubernetes release the lab ends on.  Most of it is in the "Cluster Architecture, Installation and Configuration" domain, 25% of the exam:
+
+| CKA v1.37 item | Where the lab covers it |
+| --- | --- |
+| Prepare underlying infrastructure for installing a Kubernetes cluster | [Deploy the KVM Virtual Machines Using Terraform](#deploy-the-kvm-virtual-machines-using-terraform), [Prepare the Nodes](#prepare-the-nodes), and the sizes in [`examples`](examples) |
+| Create and manage Kubernetes clusters using kubeadm | [Deploy a Kubernetes Cluster Using `kubeadm`](#deploy-a-kubernetes-cluster-using-kubeadm), [docs/kubeadm-config.md](docs/kubeadm-config.md), and [docs/practice-loop.md](docs/practice-loop.md) |
+| Manage the lifecycle of Kubernetes clusters | [Upgrade the Cluster from 1.36 to 1.37](#upgrade-the-cluster-from-136-to-137) and [docs/etcd-and-certs.md](docs/etcd-and-certs.md) |
+| Implement and configure a highly-available control plane | [docs/ha-control-plane.md](docs/ha-control-plane.md) |
+| Use Helm and Kustomize to install cluster components | [docs/helm-kustomize.md](docs/helm-kustomize.md) |
+| Understand extension interfaces (CNI, CSI, CRI, etc.) | Calico for the CNI, and containerd or [CRI-O](#optional-use-the-cri-o-runtime-instead) for the CRI.  CSI isn't covered. |
+| Understand CRDs, install and configure operators | [Deploy the Calico Networking CNI](#deploy-the-calico-networking-cni), with the Tigera operator and its `Installation` resource |
+| Monitor cluster and application resource usage (Troubleshooting) | metrics-server and `kubectl top` in [docs/helm-kustomize.md](docs/helm-kustomize.md) |
+
+The domain's other item, role based access control (RBAC), isn't covered.  Neither are the CKA's storage, workloads and scheduling, and networking domains, most of troubleshooting, or the CKAD's application topics.  They're about using a cluster, not building one, so practice them on the cluster this lab builds.
+
 ## References
 
 [GitHub: cka-d-cluster-builder-lab](https://github.com/southsidedean/cka-d-cluster-builder-lab)
