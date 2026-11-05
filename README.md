@@ -93,6 +93,8 @@ If your host is tight on memory, the control plane node can run on 3 GB: add `-v
 
 With no workers, the cluster's only node is the control plane node, and `kubeadm` taints it so ordinary pods won't run there.  Remove the taint right after `kubeadm init` with `kubectl taint nodes --all node-role.kubernetes.io/control-plane-`, and skip the steps that join the workers.
 
+The HA sizes go with [docs/ha-control-plane.md](docs/ha-control-plane.md), which sets up a virtual IP for the three control plane nodes before `kubeadm init`.  The README's own `kubeadm init` builds a cluster with a single control plane node.
+
 Below the variables, the `libvirt` provider is pinned to 0.8.x (0.9 is a rewrite the VM module doesn't support), and the module is called twice: once for the control plane nodes and once for the workers.
 
 ### What You Need
@@ -1123,6 +1125,10 @@ Draining and restarting the nodes moves Calico's pods around, so for a few minut
 ## OPTIONAL: Install Cluster Components with Helm and Kustomize
 
 The CKA expects you to install cluster components with Helm and with Kustomize.  [docs/helm-kustomize.md](docs/helm-kustomize.md) installs metrics-server on this cluster both ways, then uses it for `kubectl top`.
+
+## OPTIONAL: Build an HA Control Plane
+
+[docs/ha-control-plane.md](docs/ha-control-plane.md) builds the cluster with three control plane nodes behind a virtual IP, with keepalived and HAProxy as static pods.  It shuts down the node holding the virtual IP to check the cluster keeps working, then upgrades the HA cluster.  Use `examples/ha-lean.tfvars` or `examples/ha.tfvars`.
 
 ## OPTIONAL: Back Up and Restore etcd, and Renew Certificates
 
